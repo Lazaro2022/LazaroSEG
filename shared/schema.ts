@@ -53,6 +53,10 @@ export const insertServerSchema = createInsertSchema(servers).pick({
   totalDocuments: true,
   completedDocuments: true,
   completionPercentage: true,
+}).partial({
+  totalDocuments: true,
+  completedDocuments: true,
+  completionPercentage: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

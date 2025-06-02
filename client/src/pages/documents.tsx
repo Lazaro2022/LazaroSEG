@@ -78,16 +78,18 @@ export default function DocumentsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      handleNewDocumentSuccess();
       setIsNewDocumentOpen(false);
       toast({
         title: "Documento criado",
         description: "O documento foi criado com sucesso.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.log("Erro ao criar documento:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o documento.",
+        description: "Não foi possível criar o documento. Verifique os dados informados.",
         variant: "destructive",
       });
     },
@@ -160,9 +162,9 @@ export default function DocumentsPage() {
     defaultValues: {
       processNumber: "",
       prisonerName: "",
-      type: "",
+      type: "Certidão",
       status: "Em Andamento",
-      assignedTo: undefined,
+      assignedTo: 1,
       deadline: new Date(),
     },
   });
@@ -173,6 +175,17 @@ export default function DocumentsPage() {
 
   const onSubmit = (data: DocumentFormData) => {
     createMutation.mutate(data);
+  };
+
+  const handleNewDocumentSuccess = () => {
+    form.reset({
+      processNumber: "",
+      prisonerName: "",
+      type: "Certidão",
+      status: "Em Andamento",
+      assignedTo: 1,
+      deadline: new Date(),
+    });
   };
 
   const onEditSubmit = (data: DocumentFormData) => {
@@ -241,6 +254,9 @@ export default function DocumentsPage() {
                       className="bg-gray-800/50 border-gray-600/30"
                       placeholder="2024.001.0000"
                     />
+                    {form.formState.errors.processNumber && (
+                      <p className="text-red-400 text-xs mt-1">{form.formState.errors.processNumber.message}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -251,11 +267,17 @@ export default function DocumentsPage() {
                       className="bg-gray-800/50 border-gray-600/30"
                       placeholder="Nome completo"
                     />
+                    {form.formState.errors.prisonerName && (
+                      <p className="text-red-400 text-xs mt-1">{form.formState.errors.prisonerName.message}</p>
+                    )}
                   </div>
                   
                   <div>
                     <Label htmlFor="type">Tipo</Label>
-                    <Select onValueChange={(value) => form.setValue("type", value)}>
+                    <Select 
+                      value={form.watch("type")} 
+                      onValueChange={(value) => form.setValue("type", value)}
+                    >
                       <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
@@ -265,11 +287,17 @@ export default function DocumentsPage() {
                         <SelectItem value="Ofício">Ofício</SelectItem>
                       </SelectContent>
                     </Select>
+                    {form.formState.errors.type && (
+                      <p className="text-red-400 text-xs mt-1">{form.formState.errors.type.message}</p>
+                    )}
                   </div>
                   
                   <div>
                     <Label htmlFor="assignedTo">Responsável</Label>
-                    <Select onValueChange={(value) => form.setValue("assignedTo", parseInt(value))}>
+                    <Select 
+                      value={form.watch("assignedTo")?.toString()} 
+                      onValueChange={(value) => form.setValue("assignedTo", parseInt(value))}
+                    >
                       <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
                         <SelectValue placeholder="Selecione o responsável" />
                       </SelectTrigger>
@@ -281,6 +309,9 @@ export default function DocumentsPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {form.formState.errors.assignedTo && (
+                      <p className="text-red-400 text-xs mt-1">{form.formState.errors.assignedTo.message}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -307,6 +338,9 @@ export default function DocumentsPage() {
                         />
                       </PopoverContent>
                     </Popover>
+                    {form.formState.errors.deadline && (
+                      <p className="text-red-400 text-xs mt-1">{form.formState.errors.deadline.message}</p>
+                    )}
                   </div>
                   
                   <div className="flex space-x-2 pt-4">

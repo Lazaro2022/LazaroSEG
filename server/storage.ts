@@ -112,7 +112,8 @@ export class MemStorage implements IStorage {
         ...doc, 
         id, 
         createdAt: new Date(),
-        completedAt: doc.status === "Concluído" ? new Date() : null
+        completedAt: doc.status === "Concluído" ? new Date() : null,
+        assignedTo: doc.assignedTo || null
       });
     });
 
@@ -126,7 +127,13 @@ export class MemStorage implements IStorage {
 
     sampleServers.forEach(server => {
       const id = this.currentServerId++;
-      this.servers.set(id, { ...server, id });
+      this.servers.set(id, { 
+        ...server, 
+        id,
+        totalDocuments: server.totalDocuments || 0,
+        completedDocuments: server.completedDocuments || 0,
+        completionPercentage: server.completionPercentage || 0
+      });
     });
   }
 
@@ -184,7 +191,8 @@ export class MemStorage implements IStorage {
       ...insertDocument, 
       id, 
       createdAt: new Date(),
-      completedAt: null
+      completedAt: null,
+      assignedTo: insertDocument.assignedTo || null
     };
     this.documents.set(id, document);
     return document;
@@ -230,7 +238,13 @@ export class MemStorage implements IStorage {
 
   async createServer(insertServer: InsertServer): Promise<Server> {
     const id = this.currentServerId++;
-    const server: Server = { ...insertServer, id };
+    const server: Server = { 
+      ...insertServer, 
+      id,
+      totalDocuments: insertServer.totalDocuments || 0,
+      completedDocuments: insertServer.completedDocuments || 0,
+      completionPercentage: insertServer.completionPercentage || 0
+    };
     this.servers.set(id, server);
     return server;
   }
