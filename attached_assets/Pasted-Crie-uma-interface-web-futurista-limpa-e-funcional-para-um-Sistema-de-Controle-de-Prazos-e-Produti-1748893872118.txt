@@ -1,0 +1,46 @@
+Crie uma interface web futurista, limpa e funcional para um “Sistema de Controle de Prazos e Produtividade” usado por uma unidade prisional em regime aberto.
+
+► Visão geral
+- Tema: governo + tecnologia; aparência institucional, porém moderna.
+- Paleta: tons de azul‐cobalto, cinza-grafite e detalhes em neon turquesa para alertas.
+- Estilo: glassmorphism sutil (painéis semitranslúcidos), ícones minimalistas, sombras suaves.
+
+► Componentes obrigatórios na cena
+1. **Menu lateral fixo**  
+   - Ícones alinhados verticalmente: Dashboard, Documentos, Prazos, Relatórios, Configurações.  
+   - Logotipo no topo (“Lazarus CG”) em dourado discreto.
+
+2. **Dashboard principal**  
+   - Quatro cartões KPI grandes no topo:  
+     1. Todos os Documentos (azul-marinho)  
+     2. Em Andamento (laranja)  
+     3. Concluídos (verde)  
+     4. Vencidos (vermelho)  
+   - Cada cartão exibe contagem, ícone e barra de progresso fina.
+
+3. **Gráfico de pizza** – “Documentos por Tipo” (certidões, relatórios, ofícios).  
+   - Legenda externa, cores consistentes com cartões.
+
+4. **Tabela de documentos** logo abaixo  
+   - Colunas: Nº Processo · Apenado · Tipo · Prazo Final · Status · Ações.  
+   - Última coluna traz botões estilo pill: **Concluir**, **Editar**, **Arquivar** (respectivamente verde, cinza, roxo).
+
+5. **Cabeçalho superior**  
+   - Campo de busca global à esquerda.  
+   - À direita, avatar circular do usuário + relógio com contagem regressiva do próximo prazo (animação neon).
+
+6. **Painel “Produtividade por Servidor”**  
+   - Pequenos cards horizontais com foto ou inicial do servidor, total de documentos e porcentagem concluída.
+
+► Regras de interação (mostrar visualmente)
+- Se o prazo ≤ 2 dias, o chip de Status fica pulsando em vermelho.  
+- Ao clicar em Concluir, o documento some da lista e surge animação de check verde.  
+- Não exibir nenhuma funcionalidade de e-mail ou integração SEEU neste primeiro MVP.
+
+► Ambiente
+- Resolva em widescreen 1920×1080 px.  
+- Iluminação suave, fundo em gradiente escuro com textura sutil de circuitos.  
+- Texto em português, fonte sem serifa fina (ex.: Inter, 16 px base).
+
+► Entregável
+Render único, alta resolução, ângulo frontal ligeiramente elevado (isométrico suave) que mostre todo o dashboard em uso, comprovando que todos os elementos funcionam em conjunto.
