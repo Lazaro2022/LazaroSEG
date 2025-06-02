@@ -46,6 +46,8 @@ export const insertDocumentSchema = createInsertSchema(documents).pick({
   deadline: true,
   status: true,
   assignedTo: true,
+}).extend({
+  deadline: z.union([z.date(), z.string().transform((str) => new Date(str))]),
 });
 
 export const insertServerSchema = createInsertSchema(servers).pick({
