@@ -63,17 +63,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/documents", async (req, res) => {
     try {
-      console.log("Dados recebidos:", req.body);
       const validation = insertDocumentSchema.safeParse(req.body);
       if (!validation.success) {
-        console.log("Erro de validação:", validation.error.errors);
         return res.status(400).json({ message: "Invalid document data", errors: validation.error.errors });
       }
 
       const document = await storage.createDocument(validation.data);
       res.status(201).json(document);
     } catch (error) {
-      console.log("Erro ao criar documento:", error);
       res.status(500).json({ message: "Failed to create document" });
     }
   });
