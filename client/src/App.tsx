@@ -30,13 +30,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-          <Sidebar />
-          <div className="ml-64">
-            <Header />
-            <main className="p-6">
-              <Router />
-            </main>
-          </div>
+          <Router />
         </div>
         <Toaster />
       </TooltipProvider>
