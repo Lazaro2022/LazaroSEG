@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
-import { generatePDFReport, generateProductivityReport } from "./reports";
+import { generatePDFReport, generateProductivityReport } from "./pdf-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with sample data
@@ -239,6 +239,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Reports
+  app.get("/api/reports/productivity", async (req, res) => {
+    try {
+      const report = await generateProductivityReport();
+      res.json(report);
+    } catch (error) {
+      console.error('Error generating productivity report:', error);
+      res.status(500).json({ message: "Failed to generate productivity report" });
+    }
+  });
+
+  app.get("/api/reports/pdf", async (req, res) => {
+    try {
+      const pdfBuffer = await generatePDFReport();
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="relatorio-produtividade-${new Date().toISOString().split('T')[0]}.pdf"`,
+        'Content-Length': pdfBuffer.length
+      });
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Error generating PDF report:', error);
+      res.status(500).json({ message: "Failed to generate PDF report" });
     }
   });
 

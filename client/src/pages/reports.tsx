@@ -1,403 +1,484 @@
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { FileText, Download, Calendar, TrendingUp, Users, Clock } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import type { DocumentWithUser, ServerWithUser, DashboardStats, DocumentTypeStats } from "@shared/schema";
-import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileText, Download, Calendar, TrendingUp, Users, Clock, BarChart3, PieChart, LineChart, FileBarChart } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import type { DocumentWithUser } from "@shared/schema";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import React from "react";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement } from 'chart.js';
+import { Line, Doughnut, Bar } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  BarElement
+);
+
+interface ProductivityData {
+  totalDocuments: number;
+  completedDocuments: number;
+  inProgressDocuments: number;
+  overdueDocuments: number;
+  averageCompletionTime: number;
+  completionRate: number;
+  documentsByType: {
+    certidoes: number;
+    relatorios: number;
+    oficios: number;
+  };
+  dailyProduction: Array<{
+    date: string;
+    created: number;
+    completed: number;
+  }>;
+  monthlyTrends: Array<{
+    month: string;
+    created: number;
+    completed: number;
+  }>;
+  userProductivity: Array<{
+    userId: number;
+    userName: string;
+    totalDocuments: number;
+    completedDocuments: number;
+    inProgressDocuments: number;
+    overdueDocuments: number;
+    completionRate: number;
+    averageCompletionTime: number;
+    documentsByType: {
+      certidoes: number;
+      relatorios: number;
+      oficios: number;
+    };
+    monthlyProduction: Array<{
+      month: string;
+      completed: number;
+      total: number;
+    }>;
+  }>;
+}
 
 export default function ReportsPage() {
+  const { toast } = useToast();
+  const [exportFormat, setExportFormat] = useState("json");
+  const [reportPeriod, setReportPeriod] = useState("last6months");
+
   const { data: documents } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents"],
   });
 
-  const { data: servers } = useQuery<ServerWithUser[]>({
-    queryKey: ["/api/servers"],
+  const { data: productivityData, isLoading: isLoadingProductivity } = useQuery<ProductivityData>({
+    queryKey: ["/api/reports/productivity"],
   });
 
-  const { data: stats } = useQuery<DashboardStats>({
-    queryKey: ["/api/dashboard/stats"],
-  });
-
-  const { data: typeStats } = useQuery<DocumentTypeStats>({
-    queryKey: ["/api/dashboard/document-types"],
-  });
-
-  // Generate monthly data for the last 6 months
-  const monthlyData = React.useMemo(() => {
-    if (!documents) return [];
-
-    const now = new Date();
-    const months = eachMonthOfInterval({
-      start: subMonths(now, 5),
-      end: now
-    });
-
-    return months.map(month => {
-      const monthStart = startOfMonth(month);
-      const monthEnd = endOfMonth(month);
+  const exportPDFMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/reports/pdf');
+      if (!response.ok) throw new Error('Failed to generate PDF report');
       
-      const monthDocs = documents.filter(doc => {
-        const docDate = new Date(doc.createdAt);
-        return docDate >= monthStart && docDate <= monthEnd;
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `relatorio-produtividade-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Relatório PDF exportado",
+        description: "O relatório de produtividade foi gerado e baixado com sucesso.",
       });
+    },
+    onError: () => {
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível gerar o relatório PDF.",
+        variant: "destructive",
+      });
+    },
+  });
 
-      const completed = monthDocs.filter(doc => doc.status === "Concluído").length;
-      const inProgress = monthDocs.filter(doc => doc.status === "Em Andamento").length;
-      const overdue = monthDocs.filter(doc => doc.status === "Vencido").length;
-
-      return {
-        month: format(month, "MMM/yy", { locale: ptBR }),
-        total: monthDocs.length,
-        completed,
-        inProgress,
-        overdue,
-        efficiency: monthDocs.length > 0 ? Math.round((completed / monthDocs.length) * 100) : 0
-      };
-    });
-  }, [documents]);
-
-  // Productivity by user data
-  const productivityData = servers?.map(server => ({
-    name: server.user.name,
-    initials: server.user.initials,
-    role: server.user.role,
-    total: server.totalDocuments,
-    completed: server.completedDocuments,
-    efficiency: server.completionPercentage
-  })) || [];
-
-  // Document type distribution
-  const typeData = typeStats ? [
-    { name: 'Certidões', value: typeStats.certidoes, color: '#3b82f6' },
-    { name: 'Relatórios', value: typeStats.relatorios, color: '#10b981' },
-    { name: 'Ofícios', value: typeStats.oficios, color: '#f59e0b' },
-  ] : [];
-
-  const handleExportReport = async (format: 'json' | 'csv' = 'csv') => {
-    try {
-      const response = await fetch(`/api/reports/export?format=${format}&period=last6months`);
+  const exportDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/reports/export?format=${exportFormat}&period=${reportPeriod}`);
+      if (!response.ok) throw new Error('Failed to export data');
       
-      if (!response.ok) {
-        throw new Error('Falha ao gerar relatório');
-      }
+      const data = await response.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `dados-sistema-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Dados exportados",
+        description: "Os dados do sistema foram exportados com sucesso.",
+      });
+    },
+  });
 
-      if (format === 'csv') {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `relatorio-documentos-${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const data = await response.json();
-        const dataStr = JSON.stringify(data, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = window.URL.createObjectURL(dataBlob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `relatorio-documentos-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+  const handleExportPDF = () => {
+    exportPDFMutation.mutate();
+  };
+
+  const handleExportData = () => {
+    exportDataMutation.mutate();
+  };
+
+  if (isLoadingProductivity) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Carregando dados de produtividade...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Chart configurations
+  const documentTypeData = productivityData ? {
+    labels: ['Certidões', 'Relatórios', 'Ofícios'],
+    datasets: [{
+      data: [
+        productivityData.documentsByType.certidoes,
+        productivityData.documentsByType.relatorios,
+        productivityData.documentsByType.oficios
+      ],
+      backgroundColor: [
+        'rgba(59, 130, 246, 0.8)',
+        'rgba(245, 158, 11, 0.8)',
+        'rgba(16, 185, 129, 0.8)'
+      ],
+      borderColor: [
+        'rgb(59, 130, 246)',
+        'rgb(245, 158, 11)',
+        'rgb(16, 185, 129)'
+      ],
+      borderWidth: 2
+    }]
+  } : null;
+
+  const dailyProductionData = productivityData ? {
+    labels: productivityData.dailyProduction.map(d => d.date),
+    datasets: [
+      {
+        label: 'Documentos Criados',
+        data: productivityData.dailyProduction.map(d => d.created),
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Documentos Concluídos',
+        data: productivityData.dailyProduction.map(d => d.completed),
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        fill: true,
+        tension: 0.4
       }
-    } catch (error) {
-      alert('Erro ao exportar relatório. Tente novamente.');
+    ]
+  } : null;
+
+  const monthlyTrendsData = productivityData ? {
+    labels: productivityData.monthlyTrends.map(m => m.month),
+    datasets: [
+      {
+        label: 'Documentos Criados',
+        data: productivityData.monthlyTrends.map(m => m.created),
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderColor: 'rgb(59, 130, 246)',
+        borderWidth: 1
+      },
+      {
+        label: 'Documentos Concluídos',
+        data: productivityData.monthlyTrends.map(m => m.completed),
+        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+        borderColor: 'rgb(16, 185, 129)',
+        borderWidth: 1
+      }
+    ]
+  } : null;
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)',
+          font: {
+            size: 12
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'rgb(156, 163, 175)'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: 'rgb(156, 163, 175)'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        }
+      }
+    }
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)',
+          font: {
+            size: 12
+          }
+        }
+      }
     }
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <Sidebar />
-      
-      <main className="flex-1 ml-64 flex flex-col">
-        <Header />
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Relatórios de Produtividade</h1>
+          <p className="text-gray-400">Análise detalhada da movimentação e produtividade do sistema</p>
+        </div>
         
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Relatórios e Análises</h1>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            onClick={handleExportPDF}
+            disabled={exportPDFMutation.isPending || !productivityData}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <FileBarChart className="w-4 h-4 mr-2" />
+            {exportPDFMutation.isPending ? "Gerando PDF..." : "Exportar PDF Completo"}
+          </Button>
+          
+          <div className="flex gap-2">
+            <Select value={exportFormat} onValueChange={setExportFormat}>
+              <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="json">JSON</SelectItem>
+                <SelectItem value="csv">CSV</SelectItem>
+              </SelectContent>
+            </Select>
             
-            <div className="flex items-center space-x-4">
-              <Select defaultValue="last6months">
-                <SelectTrigger className="w-48 bg-gray-800/50 border-gray-600/30">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent className="glass-morphism-dark border-white/10">
-                  <SelectItem value="last6months">Últimos 6 meses</SelectItem>
-                  <SelectItem value="thisyear">Este ano</SelectItem>
-                  <SelectItem value="lastyear">Ano anterior</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Button 
-                onClick={() => handleExportReport('csv')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Exportar Relatório
-              </Button>
-            </div>
+            <Button 
+              onClick={handleExportData}
+              disabled={exportDataMutation.isPending}
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar Dados
+            </Button>
           </div>
+        </div>
+      </div>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="glass-morphism border-l-4 border-l-blue-500">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Total de Documentos</p>
-                    <p className="text-2xl font-bold text-blue-500">{stats?.totalDocuments || 0}</p>
-                  </div>
-                  <FileText className="w-8 h-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass-morphism border-l-4 border-l-green-500">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Taxa de Conclusão</p>
-                    <p className="text-2xl font-bold text-green-500">
-                      {stats?.totalDocuments ? Math.round((stats.completed / stats.totalDocuments) * 100) : 0}%
-                    </p>
-                  </div>
-                  <TrendingUp className="w-8 h-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass-morphism border-l-4 border-l-orange-500">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Em Andamento</p>
-                    <p className="text-2xl font-bold text-orange-500">{stats?.inProgress || 0}</p>
-                  </div>
-                  <Clock className="w-8 h-8 text-orange-500" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass-morphism border-l-4 border-l-purple-500">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Servidores Ativos</p>
-                    <p className="text-2xl font-bold text-purple-500">{servers?.length || 0}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Monthly Performance Chart */}
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BarChart className="w-5 h-5 mr-2" />
-                Desempenho Mensal
-              </CardTitle>
+      {/* Overview Stats */}
+      {productivityData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="card-glass">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-200">Total de Documentos</CardTitle>
+              <FileText className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="month" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Bar dataKey="completed" fill="#10b981" name="Concluídos" />
-                    <Bar dataKey="inProgress" fill="#f59e0b" name="Em Andamento" />
-                    <Bar dataKey="overdue" fill="#ef4444" name="Vencidos" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <div className="text-2xl font-bold text-white">{productivityData.totalDocuments}</div>
+              <p className="text-xs text-gray-400">Documentos no sistema</p>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Document Types Distribution */}
-            <Card className="glass-morphism">
-              <CardHeader>
-                <CardTitle>Distribuição por Tipo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={typeData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {typeData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '8px'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                <div className="mt-4 space-y-2">
-                  {typeData.map((item) => {
-                    const total = typeData.reduce((sum, type) => sum + type.value, 0);
-                    const percentage = total > 0 ? Math.round((item.value / total) * 100) : 0;
-                    return (
-                      <div key={item.name} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: item.color }}
-                          ></div>
-                          <span className="text-sm text-gray-300">{item.name}</span>
-                        </div>
-                        <span className="text-sm font-medium text-white">
-                          {item.value} ({percentage}%)
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Efficiency Trend */}
-            <Card className="glass-morphism">
-              <CardHeader>
-                <CardTitle>Tendência de Eficiência</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                      <XAxis dataKey="month" stroke="#9ca3af" />
-                      <YAxis stroke="#9ca3af" domain={[0, 100]} />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '8px'
-                        }}
-                        formatter={(value) => [`${value}%`, 'Eficiência']}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="efficiency" 
-                        stroke="#14b8a6" 
-                        strokeWidth={3}
-                        dot={{ fill: '#14b8a6', strokeWidth: 2, r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Productivity by Server */}
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>Produtividade por Servidor</CardTitle>
+          <Card className="card-glass">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-200">Taxa de Conclusão</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-3 px-4 font-medium text-gray-300">Servidor</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-300">Cargo</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-300">Total</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-300">Concluídos</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-300">Eficiência</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {productivityData
-                      .sort((a, b) => b.efficiency - a.efficiency)
-                      .map((server, index) => (
-                        <tr 
-                          key={server.name} 
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                        >
-                          <td className="py-4 px-4">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${
-                                index === 0 ? 'from-blue-500 to-purple-600' :
-                                index === 1 ? 'from-green-500 to-teal-600' :
-                                index === 2 ? 'from-yellow-500 to-orange-600' :
-                                'from-red-500 to-pink-600'
-                              } flex items-center justify-center text-white text-xs font-semibold`}>
-                                {server.initials}
-                              </div>
-                              <span className="text-white font-medium">{server.name}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 text-gray-300">{server.role}</td>
-                          <td className="py-4 px-4 text-white">{server.total}</td>
-                          <td className="py-4 px-4 text-white">{server.completed}</td>
-                          <td className="py-4 px-4">
-                            <span className={`font-semibold ${
-                              server.efficiency >= 90 ? 'text-green-500' :
-                              server.efficiency >= 75 ? 'text-orange-500' :
-                              'text-red-500'
-                            }`}>
-                              {server.efficiency}%
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <Badge 
-                              className={
-                                server.efficiency >= 90 ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                                server.efficiency >= 75 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
-                                'bg-red-500/20 text-red-400 border-red-500/30'
-                              }
-                            >
-                              {server.efficiency >= 90 ? 'Excelente' :
-                               server.efficiency >= 75 ? 'Bom' : 'Precisa Melhorar'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
+              <div className="text-2xl font-bold text-white">{productivityData.completionRate.toFixed(1)}%</div>
+              <p className="text-xs text-gray-400">Eficiência geral</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-glass">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-200">Tempo Médio</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{productivityData.averageCompletionTime.toFixed(1)}</div>
+              <p className="text-xs text-gray-400">Dias para conclusão</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-glass">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-200">Documentos Vencidos</CardTitle>
+              <Calendar className="h-4 w-4 text-red-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{productivityData.overdueDocuments}</div>
+              <p className="text-xs text-gray-400">Precisam de atenção</p>
             </CardContent>
           </Card>
         </div>
-      </main>
+      )}
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Document Types Distribution */}
+        <Card className="card-glass">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <PieChart className="w-5 h-5" />
+              Distribuição por Tipo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              {documentTypeData && (
+                <Doughnut data={documentTypeData} options={doughnutOptions} />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Daily Production */}
+        <Card className="card-glass">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <LineChart className="w-5 h-5" />
+              Produção Diária (30 dias)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              {dailyProductionData && (
+                <Line data={dailyProductionData} options={chartOptions} />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Monthly Trends */}
+      <Card className="card-glass">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Tendências Mensais (6 meses)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            {monthlyTrendsData && (
+              <Bar data={monthlyTrendsData} options={chartOptions} />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* User Productivity */}
+      {productivityData?.userProductivity && (
+        <Card className="card-glass">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Produtividade por Servidor
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {productivityData.userProductivity.map((user) => (
+              <div key={user.userId} className="border border-white/10 rounded-lg p-4 bg-white/5">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{user.userName}</h3>
+                    <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-300">
+                      <span>Total: {user.totalDocuments}</span>
+                      <span>Concluídos: {user.completedDocuments}</span>
+                      <span>Em Andamento: {user.inProgressDocuments}</span>
+                      <span>Vencidos: {user.overdueDocuments}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col lg:items-end gap-2">
+                    <Badge 
+                      className={`${
+                        user.completionRate >= 80 
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                          : user.completionRate >= 60
+                          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                          : 'bg-red-500/20 text-red-400 border-red-500/30'
+                      }`}
+                    >
+                      {user.completionRate.toFixed(1)}% de conclusão
+                    </Badge>
+                    <span className="text-xs text-gray-400">
+                      Tempo médio: {user.averageCompletionTime.toFixed(1)} dias
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
+                  <div className="text-center">
+                    <div className="text-blue-400 font-semibold">{user.documentsByType.certidoes}</div>
+                    <div className="text-gray-400">Certidões</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-yellow-400 font-semibold">{user.documentsByType.relatorios}</div>
+                    <div className="text-gray-400">Relatórios</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-green-400 font-semibold">{user.documentsByType.oficios}</div>
+                    <div className="text-gray-400">Ofícios</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
