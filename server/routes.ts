@@ -289,7 +289,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // System Settings
   app.get("/api/settings", async (req, res) => {
     try {
-      const query = `SELECT * FROM system_settings ORDER BY id DESC LIMIT 1`;
       const result = await db.execute(sql`SELECT * FROM system_settings ORDER BY id DESC LIMIT 1`);
       const settings = result.rows[0] || {
         system_name: 'Lazarus CG - Sistema de Controle',
@@ -310,32 +309,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/settings", async (req, res) => {
     try {
       const settings = req.body;
-      const query = `
-        INSERT INTO system_settings (system_name, institution, timezone, language, urgent_days, warning_days, auto_archive, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-        ON CONFLICT (id) DO UPDATE SET
-          system_name = EXCLUDED.system_name,
-          institution = EXCLUDED.institution,
-          timezone = EXCLUDED.timezone,
-          language = EXCLUDED.language,
-          urgent_days = EXCLUDED.urgent_days,
-          warning_days = EXCLUDED.warning_days,
-          auto_archive = EXCLUDED.auto_archive,
+      
+      // First try to update existing settings
+      const updateResult = await db.execute(sql`
+        UPDATE system_settings SET
+          system_name = ${settings.systemName},
+          institution = ${settings.institution},
+          timezone = ${settings.timezone},
+          language = ${settings.language},
+          urgent_days = ${settings.urgentDays},
+          warning_days = ${settings.warningDays},
+          auto_archive = ${settings.autoArchive},
           updated_at = NOW()
+        WHERE id = 1
         RETURNING *
-      `;
+      `);
       
-      const result = await db.execute(sql.raw(query, [
-        settings.systemName,
-        settings.institution,
-        settings.timezone,
-        settings.language,
-        settings.urgentDays,
-        settings.warningDays,
-        settings.autoArchive
-      ]));
-      
-      res.json(result.rows[0]);
+      if (updateResult.rows.length === 0) {
+        // If no existing settings, insert new ones
+        const insertResult = await db.execute(sql`
+          INSERT INTO system_settings (system_name, institution, timezone, language, urgent_days, warning_days, auto_archive, updated_at)
+          VALUES (${settings.systemName}, ${settings.institution}, ${settings.timezone}, ${settings.language}, ${settings.urgentDays}, ${settings.warningDays}, ${settings.autoArchive}, NOW())
+          RETURNING *
+        `);
+        res.json(insertResult.rows[0]);
+      } else {
+        res.json(updateResult.rows[0]);
+      }
     } catch (error) {
       console.error('Error saving settings:', error);
       res.status(500).json({ message: "Failed to save settings" });

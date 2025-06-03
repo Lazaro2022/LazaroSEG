@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import type { User as UserType, InsertUser } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const userFormSchema = z.object({
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
@@ -30,15 +30,45 @@ const userFormSchema = z.object({
 
 type UserFormData = z.infer<typeof userFormSchema>;
 
+interface SystemSettings {
+  system_name: string;
+  institution: string;
+  timezone: string;
+  language: string;
+  urgent_days: number;
+  warning_days: number;
+  auto_archive: boolean;
+}
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>({
+    system_name: "Lazarus CG - Sistema de Controle",
+    institution: "Unidade Prisional - Manaus/AM", 
+    timezone: "america/manaus",
+    language: "pt-br",
+    urgent_days: 2,
+    warning_days: 7,
+    auto_archive: true
+  });
 
   const { data: users = [] } = useQuery<UserType[]>({
     queryKey: ["/api/users"],
   });
+
+  const { data: settings } = useQuery<SystemSettings>({
+    queryKey: ["/api/settings"],
+  });
+
+  // Update local state when settings are loaded
+  useEffect(() => {
+    if (settings) {
+      setSystemSettings(settings);
+    }
+  }, [settings]);
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
@@ -103,6 +133,40 @@ export default function SettingsPage() {
       toast({
         title: "Erro",
         description: "Falha ao atualizar usuário.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (settings: SystemSettings) => {
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemName: settings.system_name,
+          institution: settings.institution,
+          timezone: settings.timezone,
+          language: settings.language,
+          urgentDays: settings.urgent_days,
+          warningDays: settings.warning_days,
+          autoArchive: settings.auto_archive
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to save settings");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      toast({
+        title: "Configurações salvas",
+        description: "As configurações do sistema foram salvas com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar as configurações.",
         variant: "destructive",
       });
     },
@@ -210,7 +274,8 @@ export default function SettingsPage() {
                       <Label htmlFor="systemName">Nome do Sistema</Label>
                       <Input
                         id="systemName"
-                        defaultValue="Lazarus CG - Sistema de Controle"
+                        value={systemSettings.system_name}
+                        onChange={(e) => setSystemSettings(prev => ({ ...prev, system_name: e.target.value }))}
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
@@ -219,14 +284,18 @@ export default function SettingsPage() {
                       <Label htmlFor="institution">Instituição</Label>
                       <Input
                         id="institution"
-                        defaultValue="Unidade Prisional - Regime Aberto"
+                        value={systemSettings.institution}
+                        onChange={(e) => setSystemSettings(prev => ({ ...prev, institution: e.target.value }))}
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
                     
                     <div>
                       <Label htmlFor="timezone">Fuso Horário</Label>
-                      <Select defaultValue="america/sao_paulo">
+                      <Select 
+                        value={systemSettings.timezone} 
+                        onValueChange={(value) => setSystemSettings(prev => ({ ...prev, timezone: value }))}
+                      >
                         <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
                           <SelectValue />
                         </SelectTrigger>
@@ -240,7 +309,10 @@ export default function SettingsPage() {
                     
                     <div>
                       <Label htmlFor="language">Idioma</Label>
-                      <Select defaultValue="pt-br">
+                      <Select 
+                        value={systemSettings.language}
+                        onValueChange={(value) => setSystemSettings(prev => ({ ...prev, language: value }))}
+                      >
                         <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
                           <SelectValue />
                         </SelectTrigger>
@@ -264,7 +336,8 @@ export default function SettingsPage() {
                       <Input
                         id="urgentDays"
                         type="number"
-                        defaultValue="2"
+                        value={systemSettings.urgent_days}
+                        onChange={(e) => setSystemSettings(prev => ({ ...prev, urgent_days: parseInt(e.target.value) || 2 }))}
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                       <p className="text-xs text-gray-400 mt-1">
@@ -277,7 +350,8 @@ export default function SettingsPage() {
                       <Input
                         id="warningDays"
                         type="number"
-                        defaultValue="7"
+                        value={systemSettings.warning_days}
+                        onChange={(e) => setSystemSettings(prev => ({ ...prev, warning_days: parseInt(e.target.value) || 7 }))}
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                       <p className="text-xs text-gray-400 mt-1">
@@ -292,7 +366,21 @@ export default function SettingsPage() {
                           Arquivar documentos concluídos após 30 dias
                         </p>
                       </div>
-                      <Switch id="autoArchive" defaultChecked />
+                      <Switch 
+                        id="autoArchive" 
+                        checked={systemSettings.auto_archive}
+                        onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, auto_archive: checked }))}
+                      />
+                    </div>
+                    
+                    <div className="pt-4">
+                      <Button 
+                        onClick={() => saveSettingsMutation.mutate(systemSettings)}
+                        disabled={saveSettingsMutation.isPending}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        {saveSettingsMutation.isPending ? "Salvando..." : "Salvar Configurações"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
