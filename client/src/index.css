@@ -47,20 +47,20 @@
 
   body {
     @apply bg-background text-foreground font-inter;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-    background-attachment: fixed;
+    background: #0f172a;
     min-height: 100vh;
   }
 }
 
 @layer components {
   .glass-morphism {
-    @apply bg-white/5 backdrop-blur-[10px] border border-white/10 rounded-lg;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    @apply bg-gray-900/80 border border-gray-700/50 rounded-lg;
+    backdrop-filter: none;
   }
 
   .glass-morphism-dark {
-    @apply bg-black/30 backdrop-blur-[15px] border border-white/5 rounded-lg;
+    @apply bg-gray-800/90 border border-gray-600/50 rounded-lg;
+    backdrop-filter: none;
   }
 
   .neon-glow {

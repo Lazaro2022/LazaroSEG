@@ -12,10 +12,12 @@ export default function Dashboard() {
       <main className="flex-1 ml-64 flex flex-col">
         <Header />
         
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <KpiCards />
-          <ChartsPanel />
-          <DocumentsTable />
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            <KpiCards />
+            <ChartsPanel />
+            <DocumentsTable />
+          </div>
         </div>
       </main>
     </div>
