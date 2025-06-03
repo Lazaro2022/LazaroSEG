@@ -142,7 +142,7 @@ export default function DocumentsPage() {
     },
   });
 
-  const archiveMutation = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: async (documentId: number) => {
       return apiRequest("DELETE", `/api/documents/${documentId}`);
     },
@@ -150,8 +150,8 @@ export default function DocumentsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       toast({
-        title: "Documento arquivado",
-        description: "O documento foi arquivado com sucesso.",
+        title: "Documento excluído",
+        description: "O documento foi excluído com sucesso.",
       });
     },
   });
@@ -197,8 +197,14 @@ export default function DocumentsPage() {
     },
   });
 
+
+
   const handleRestoreDocument = (id: number) => {
     restoreMutation.mutate(id);
+  };
+
+  const handleArchiveDocument = (id: number) => {
+    archiveMutation.mutate(id);
   };
 
   const onSubmit = (data: DocumentFormData) => {
@@ -491,16 +497,18 @@ export default function DocumentsPage() {
                                 <Edit className="w-3 h-3 mr-1" />
                                 Editar
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="pill-button bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 text-xs px-3 py-1"
-                                onClick={() => archiveMutation.mutate(document.id)}
-                                disabled={archiveMutation.isPending}
-                              >
-                                <Archive className="w-3 h-3 mr-1" />
-                                Arquivar
-                              </Button>
+                              {document.status === "Concluído" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="pill-button bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 text-xs px-3 py-1"
+                                  onClick={() => handleArchiveDocument(document.id)}
+                                  disabled={archiveMutation.isPending}
+                                >
+                                  <Archive className="w-3 h-3 mr-1" />
+                                  Arquivar
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -531,8 +539,10 @@ export default function DocumentsPage() {
                   </div>
                   <Button
                     variant="outline"
-                    onClick={() => setIsArchivedOpen(false)}
-                    className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
+                    onClick={() => {
+                      setIsArchivedOpen(false);
+                    }}
+                    className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600 hover:text-white"
                   >
                     Voltar ao Menu
                   </Button>
