@@ -451,8 +451,15 @@ export default function DocumentsPage() {
                       {filteredDocuments.map((document) => {
                         const now = new Date();
                         const deadline = new Date(document.deadline);
-                        const isUrgent = deadline <= new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000)) && document.status !== "Concluído";
-                        const displayStatus = isUrgent && document.status === "Em Andamento" ? "Urgente" : document.status;
+                        const isOverdue = deadline < now && document.status !== "Concluído";
+                        const isUrgent = deadline <= new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000)) && document.status !== "Concluído" && !isOverdue;
+                        
+                        let displayStatus = document.status;
+                        if (isOverdue) {
+                          displayStatus = "Vencido";
+                        } else if (isUrgent && document.status === "Em Andamento") {
+                          displayStatus = "Urgente";
+                        }
                         
                         return (
                           <tr 
