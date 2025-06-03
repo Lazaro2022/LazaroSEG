@@ -82,6 +82,9 @@ export default function ReportsPage() {
 
   const { data: productivityData, isLoading: isLoadingProductivity } = useQuery<ProductivityData>({
     queryKey: ["/api/reports/productivity"],
+    refetchInterval: 2000, // Atualiza a cada 2 segundos
+    refetchOnWindowFocus: true, // Atualiza quando a janela recebe foco
+    staleTime: 0, // Considera dados sempre desatualizados
   });
 
   const exportPDFMutation = useMutation({
