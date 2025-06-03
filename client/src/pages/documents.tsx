@@ -69,6 +69,11 @@ export default function DocumentsPage() {
     queryKey: ["/api/users"],
   });
 
+  const archivedDocumentsQuery = useQuery<DocumentWithUser[]>({
+    queryKey: ["/api/documents/archived"],
+    enabled: isArchivedOpen,
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: DocumentFormData) => {
       return apiRequest("POST", "/api/documents", {
@@ -169,6 +174,32 @@ export default function DocumentsPage() {
   const editForm = useForm<DocumentFormData>({
     resolver: zodResolver(documentFormSchema),
   });
+
+  const restoreMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("PATCH", `/api/documents/${id}/restore`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Documento restaurado",
+        description: "O documento foi restaurado com sucesso.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents/archived"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao restaurar o documento.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRestoreDocument = (id: number) => {
+    restoreMutation.mutate(id);
+  };
 
   const onSubmit = (data: DocumentFormData) => {
     createMutation.mutate(data);
@@ -505,7 +536,59 @@ export default function DocumentsPage() {
                   </Button>
                 </div>
               </DialogHeader>
-              <ArchivedDocumentsList />
+              <div className="max-h-96 overflow-y-auto">
+                {archivedDocumentsQuery.isLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+                    <p className="text-gray-400 mt-2">Carregando documentos arquivados...</p>
+                  </div>
+                ) : archivedDocumentsQuery.data && archivedDocumentsQuery.data.length > 0 ? (
+                  <div className="space-y-3">
+                    {archivedDocumentsQuery.data.map((doc: DocumentWithUser) => (
+                      <div key={doc.id} className="p-4 bg-gray-800/50 rounded-lg border border-gray-600/30">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <span className="font-mono text-blue-400 text-sm font-medium">
+                                {doc.processNumber}
+                              </span>
+                              <Badge className="bg-gray-600/30 text-gray-300 border-gray-500/30">
+                                {doc.type}
+                              </Badge>
+                              <Badge className="bg-green-600/20 text-green-400 border-green-500/30">
+                                Arquivado
+                              </Badge>
+                            </div>
+                            <p className="text-white font-medium">{doc.prisonerName}</p>
+                            <div className="flex items-center space-x-4 text-xs text-gray-400 mt-1">
+                              <span>Arquivado em: {format(new Date(doc.archivedAt || doc.completedAt || doc.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                              {doc.assignedUser && (
+                                <span>Responsável: {doc.assignedUser.name}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRestoreDocument(doc.id)}
+                            className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30"
+                            disabled={restoreMutation.isPending}
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Restaurar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Archive className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-400">Nenhum documento arquivado encontrado</p>
+                    <p className="text-gray-500 text-sm">Os documentos arquivados aparecerão aqui quando você arquivar documentos concluídos</p>
+                  </div>
+                )}
+              </div>
             </DialogContent>
           </Dialog>
           </div>
