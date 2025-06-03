@@ -60,29 +60,29 @@ export interface SystemReport {
 }
 
 export async function generateProductivityReport(): Promise<SystemReport> {
-  const allDocuments = await storage.getAllDocuments();
+  const activeDocuments = await storage.getAllDocuments();
   const archivedDocuments = await storage.getArchivedDocuments();
-  const documents = [...allDocuments, ...archivedDocuments];
   const users = await storage.getAllUsers();
   
   const now = new Date();
   const thirtyDaysAgo = subDays(now, 30);
   const sixMonthsAgo = subMonths(now, 6);
   
-  // System-wide statistics
-  const totalDocuments = documents.length;
-  const completedDocuments = documents.filter(doc => doc.status === 'Concluído').length;
-  const inProgressDocuments = documents.filter(doc => doc.status === 'Em Andamento').length;
-  const overdueDocuments = documents.filter(doc => {
+  // System-wide statistics - count all documents (active + archived)
+  const totalDocuments = activeDocuments.length + archivedDocuments.length;
+  const completedDocuments = activeDocuments.filter(doc => doc.status === 'Concluído').length + archivedDocuments.length;
+  const inProgressDocuments = activeDocuments.filter(doc => doc.status === 'Em Andamento').length;
+  const overdueDocuments = activeDocuments.filter(doc => {
     const deadline = new Date(doc.deadline);
     return deadline < now && doc.status !== 'Concluído';
   }).length;
   
   const completionRate = totalDocuments > 0 ? (completedDocuments / totalDocuments) * 100 : 0;
   
-  // Average completion time
-  const completedDocsWithTime = documents.filter(doc => 
-    doc.status === 'Concluído' && doc.completedAt && doc.createdAt
+  // Average completion time - use both active completed docs and archived docs
+  const allCompletedDocs = [...activeDocuments.filter(doc => doc.status === 'Concluído'), ...archivedDocuments];
+  const completedDocsWithTime = allCompletedDocs.filter(doc => 
+    doc.completedAt && doc.createdAt
   );
   const averageCompletionTime = completedDocsWithTime.length > 0 
     ? completedDocsWithTime.reduce((acc, doc) => {
@@ -92,20 +92,21 @@ export async function generateProductivityReport(): Promise<SystemReport> {
       }, 0) / completedDocsWithTime.length
     : 0;
   
-  // Documents by type
+  // Documents by type - count all documents (active + archived)
+  const allDocuments = [...activeDocuments, ...archivedDocuments];
   const documentsByType = {
-    certidoes: documents.filter(doc => doc.type === 'Certidão').length,
-    relatorios: documents.filter(doc => doc.type === 'Relatório').length,
-    oficios: documents.filter(doc => doc.type === 'Ofício').length,
+    certidoes: allDocuments.filter(doc => doc.type === 'Certidão').length,
+    relatorios: allDocuments.filter(doc => doc.type === 'Relatório').length,
+    oficios: allDocuments.filter(doc => doc.type === 'Ofício').length,
   };
   
   // Daily production for last 30 days
   const dailyProduction = eachDayOfInterval({ start: thirtyDaysAgo, end: now }).map(date => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const created = documents.filter(doc => 
+    const created = allDocuments.filter(doc => 
       format(new Date(doc.createdAt), 'yyyy-MM-dd') === dateStr
     ).length;
-    const completed = documents.filter(doc => 
+    const completed = allDocuments.filter(doc => 
       doc.completedAt && format(new Date(doc.completedAt), 'yyyy-MM-dd') === dateStr
     ).length;
     
@@ -119,11 +120,11 @@ export async function generateProductivityReport(): Promise<SystemReport> {
   // Monthly trends for last 6 months
   const monthlyTrends = eachMonthOfInterval({ start: sixMonthsAgo, end: now }).map(monthStart => {
     const monthEnd = endOfMonth(monthStart);
-    const monthDocs = documents.filter(doc => {
+    const monthDocs = allDocuments.filter(doc => {
       const created = new Date(doc.createdAt);
       return created >= monthStart && created <= monthEnd;
     });
-    const monthCompleted = documents.filter(doc => {
+    const monthCompleted = allDocuments.filter(doc => {
       if (!doc.completedAt) return false;
       const completed = new Date(doc.completedAt);
       return completed >= monthStart && completed <= monthEnd;
@@ -138,10 +139,10 @@ export async function generateProductivityReport(): Promise<SystemReport> {
   
   // User productivity
   const userProductivity: ProductivityReport[] = users.map(user => {
-    const userDocs = documents.filter(doc => doc.assignedTo === user.id);
-    const userCompleted = userDocs.filter(doc => doc.status === 'Concluído');
-    const userInProgress = userDocs.filter(doc => doc.status === 'Em Andamento');
-    const userOverdue = userDocs.filter(doc => {
+    const userDocs = allDocuments.filter(doc => doc.assignedTo === user.id);
+    const userCompleted = userDocs.filter(doc => doc.status === 'Concluído' || archivedDocuments.some(archived => archived.id === doc.id));
+    const userInProgress = activeDocuments.filter(doc => doc.assignedTo === user.id && doc.status === 'Em Andamento');
+    const userOverdue = activeDocuments.filter(doc => doc.assignedTo === user.id && {
       const deadline = new Date(doc.deadline);
       return deadline < now && doc.status !== 'Concluído';
     });
