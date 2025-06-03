@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, CheckCircle, Edit, Archive, CalendarIcon, Search, RotateCcw } from "lucide-react";
@@ -525,7 +525,9 @@ export default function DocumentsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <DialogTitle className="text-xl font-semibold">Nos Autos - Documentos Arquivados</DialogTitle>
-                    <p className="text-gray-400 text-sm">Documentos que foram lidos e juntados no processo</p>
+                    <p className="text-gray-400 text-sm">
+                      Documentos que foram lidos e juntados no processo
+                    </p>
                   </div>
                   <Button
                     variant="outline"
