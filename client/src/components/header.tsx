@@ -116,16 +116,7 @@ export function Header() {
         
         {/* User Info & Countdown */}
         <div className="flex items-center space-x-6">
-          {/* Countdown Timer */}
-          <div className="flex items-center space-x-3 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2">
-            <Clock className="text-red-400 w-5 h-5 animate-pulse" />
-            <div className="text-sm">
-              <div className="text-red-400 font-medium">Próximo Prazo</div>
-              <div className="text-white font-bold">
-                {timeLeft || "Sem prazos"}
-              </div>
-            </div>
-          </div>
+
           
           {/* User Avatar */}
           <div className="flex items-center space-x-3">
