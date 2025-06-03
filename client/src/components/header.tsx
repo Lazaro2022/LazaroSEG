@@ -112,10 +112,109 @@ export function Header() {
   return (
     <header className="glass-morphism border-b border-white/10 p-6">
       <div className="flex items-center justify-between">
-        <div className="flex-1"></div>
+        {/* Search Bar */}
+        <div className="flex-1 max-w-lg relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Buscar documentos, processos ou apenados..."
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
+            onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border-gray-600/30 rounded-lg focus:border-[hsl(var(--neon-turquoise))] focus:ring-2 focus:ring-[hsl(var(--neon-turquoise))]/20 text-white placeholder-gray-400"
+          />
+          
+          {/* Search Results Dropdown */}
+          {showSearchResults && filteredDocuments.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 z-50">
+              <Card className="glass-morphism-dark border-white/10">
+                <CardContent className="p-2">
+                  <div className="space-y-2">
+                    {filteredDocuments.map((document) => {
+                      const deadline = new Date(document.deadline);
+                      const now = new Date();
+                      const isUrgent = deadline <= new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000)) && document.status !== "Concluído";
+                      const displayStatus = isUrgent && document.status === "Em Andamento" ? "Urgente" : document.status;
+                      
+                      return (
+                        <div
+                          key={document.id}
+                          onClick={() => handleDocumentClick(document.id)}
+                          className="p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="font-mono text-blue-400 text-sm">
+                                  {document.processNumber}
+                                </span>
+                                <Badge 
+                                  variant="outline" 
+                                  className={`${getStatusColor(displayStatus)} border text-xs`}
+                                >
+                                  {displayStatus}
+                                </Badge>
+                              </div>
+                              <p className="text-white text-sm font-medium">{document.prisonerName}</p>
+                              <div className="flex items-center space-x-4 text-xs text-gray-400">
+                                <span>{document.type}</span>
+                                <span>Prazo: {format(deadline, "dd/MM/yyyy", { locale: ptBR })}</span>
+                                {document.assignedUser && (
+                                  <span>Resp.: {document.assignedUser.name}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {searchTerm.length >= 2 && (
+                      <div className="p-2 border-t border-white/10">
+                        <button
+                          onClick={() => {
+                            setShowSearchResults(false);
+                            setLocation("/documents");
+                          }}
+                          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          Ver todos os resultados para "{searchTerm}"
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          {/* No Results */}
+          {showSearchResults && searchTerm.length >= 2 && filteredDocuments.length === 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 z-50">
+              <Card className="glass-morphism-dark border-white/10">
+                <CardContent className="p-4 text-center">
+                  <p className="text-gray-400 text-sm">
+                    Nenhum documento encontrado para "{searchTerm}"
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
         
         {/* User Info & Countdown */}
         <div className="flex items-center space-x-6">
+          {/* Countdown Timer */}
+          <div className="flex items-center space-x-3 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2">
+            <Clock className="text-red-400 w-5 h-5 animate-pulse" />
+            <div className="text-sm">
+              <div className="text-red-400 font-medium">Próximo Prazo</div>
+              <div className="text-white font-bold">
+                {timeLeft || "Sem prazos"}
+              </div>
+            </div>
+          </div>
 
           
           {/* User Avatar */}
