@@ -199,8 +199,32 @@ export default function DocumentsPage() {
     createMutation.mutate(data);
   };
 
+  const editForm = useForm<DocumentFormData>({
+    resolver: zodResolver(documentFormSchema),
+  });
+
   const handleEdit = (document: DocumentWithUser) => {
     setEditingDocument(document);
+    editForm.reset({
+      processNumber: document.processNumber,
+      prisonerName: document.prisonerName,
+      type: document.type as any,
+      status: document.status as any,
+      assignedTo: document.assignedTo || 2,
+      deadline: new Date(document.deadline),
+    });
+  };
+
+  const onEditSubmit = (data: DocumentFormData) => {
+    if (editingDocument) {
+      updateMutation.mutate({ 
+        id: editingDocument.id, 
+        data: {
+          ...data,
+          deadline: data.deadline,
+        }
+      });
+    }
   };
 
   const filteredDocuments = documents?.filter(doc => {
@@ -516,6 +540,130 @@ export default function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Edit Document Dialog */}
+            <Dialog open={!!editingDocument} onOpenChange={(open) => !open && setEditingDocument(null)}>
+              <DialogContent className="glass-morphism-dark border-white/10 max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-semibold">Editar Documento</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                  <div>
+                    <Label>Número do Processo</Label>
+                    <Input
+                      {...editForm.register("processNumber")}
+                      placeholder="Ex: 2024.001.0001"
+                      className="bg-gray-800/50 border-gray-600/30"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Nome do Apenado</Label>
+                    <Input
+                      {...editForm.register("prisonerName")}
+                      placeholder="Nome completo"
+                      className="bg-gray-800/50 border-gray-600/30"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Tipo de Documento</Label>
+                    <Select 
+                      value={editForm.watch("type")} 
+                      onValueChange={(value) => editForm.setValue("type", value as any)}
+                    >
+                      <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Certidão">Certidão</SelectItem>
+                        <SelectItem value="Relatório">Relatório</SelectItem>
+                        <SelectItem value="Ofício">Ofício</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label>Status</Label>
+                    <Select 
+                      value={editForm.watch("status")} 
+                      onValueChange={(value) => editForm.setValue("status", value as any)}
+                    >
+                      <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                        <SelectItem value="Concluído">Concluído</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label>Responsável</Label>
+                    <Select 
+                      value={editForm.watch("assignedTo")?.toString()} 
+                      onValueChange={(value) => editForm.setValue("assignedTo", parseInt(value))}
+                    >
+                      <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users?.map((user) => (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            {user.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label>Prazo Final</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-gray-800/50 border-gray-600/30",
+                            !editForm.watch("deadline") && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {editForm.watch("deadline") ? format(editForm.watch("deadline"), "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 glass-morphism-dark border-white/10">
+                        <Calendar
+                          mode="single"
+                          selected={editForm.watch("deadline")}
+                          onSelect={(date) => date && editForm.setValue("deadline", date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setEditingDocument(null)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      disabled={updateMutation.isPending}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
 
             {/* Archived Documents Dialog */}
             <Dialog open={isArchivedOpen} onOpenChange={setIsArchivedOpen}>
