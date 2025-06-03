@@ -21,6 +21,8 @@ export const documents = pgTable("documents", {
   assignedTo: integer("assigned_to").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
+  archivedAt: timestamp("archived_at"),
+  isArchived: boolean("is_archived").default(false).notNull(),
 });
 
 export const servers = pgTable("servers", {

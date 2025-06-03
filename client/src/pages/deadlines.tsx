@@ -127,8 +127,10 @@ export default function DeadlinesPage() {
     if (allSelected) {
       setSelectedDocuments(prev => prev.filter(id => !allIds.includes(id)));
     } else {
-      const uniqueIds = [...prev, ...allIds];
-      setSelectedDocuments(Array.from(new Set(uniqueIds)));
+      setSelectedDocuments(prev => {
+        const uniqueIds = [...prev, ...allIds];
+        return Array.from(new Set(uniqueIds));
+      });
     }
   };
 

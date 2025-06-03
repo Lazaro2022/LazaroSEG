@@ -18,6 +18,8 @@ export interface IStorage {
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: number, updates: Partial<Document>): Promise<Document | undefined>;
   deleteDocument(id: number): Promise<boolean>;
+  archiveDocument(id: number): Promise<Document | undefined>;
+  restoreDocument(id: number): Promise<Document | undefined>;
   
   // Servers/Productivity
   getServer(id: number): Promise<ServerWithUser | undefined>;
@@ -152,6 +154,8 @@ export class DatabaseStorage implements IStorage {
       assignedTo: documents.assignedTo,
       createdAt: documents.createdAt,
       completedAt: documents.completedAt,
+      archivedAt: documents.archivedAt,
+      isArchived: documents.isArchived,
       assignedUser: {
         id: users.id,
         username: users.username,
@@ -184,6 +188,8 @@ export class DatabaseStorage implements IStorage {
       assignedTo: documents.assignedTo,
       createdAt: documents.createdAt,
       completedAt: documents.completedAt,
+      archivedAt: documents.archivedAt,
+      isArchived: documents.isArchived,
       assignedUser: {
         id: users.id,
         username: users.username,
@@ -253,6 +259,30 @@ export class DatabaseStorage implements IStorage {
   async deleteDocument(id: number): Promise<boolean> {
     const result = await db.delete(documents).where(eq(documents.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async archiveDocument(id: number): Promise<Document | undefined> {
+    const [archivedDoc] = await db.update(documents)
+      .set({ 
+        isArchived: true, 
+        archivedAt: new Date(),
+        status: "Arquivado"
+      })
+      .where(eq(documents.id, id))
+      .returning();
+    return archivedDoc || undefined;
+  }
+
+  async restoreDocument(id: number): Promise<Document | undefined> {
+    const [restoredDoc] = await db.update(documents)
+      .set({ 
+        isArchived: false, 
+        archivedAt: null,
+        status: "Em Andamento"
+      })
+      .where(eq(documents.id, id))
+      .returning();
+    return restoredDoc || undefined;
   }
 
   // Server methods
