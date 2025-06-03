@@ -8,11 +8,150 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Settings, User, Bell, Lock, Database, Globe } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Settings, User, Bell, Lock, Database, Globe, Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import type { User as UserType, InsertUser } from "@shared/schema";
+import { useState } from "react";
+
+const userFormSchema = z.object({
+  username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  role: z.string().min(1, "Cargo é obrigatório"),
+  initials: z.string().min(2, "Iniciais devem ter pelo menos 2 caracteres").max(3, "Iniciais devem ter no máximo 3 caracteres"),
+});
+
+type UserFormData = z.infer<typeof userFormSchema>;
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+
+  const { data: users = [] } = useQuery<UserType[]>({
+    queryKey: ["/api/users"],
+  });
+
+  const form = useForm<UserFormData>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      name: "",
+      role: "",
+      initials: "",
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: UserFormData) => {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to create user");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setUserDialogOpen(false);
+      form.reset();
+      toast({
+        title: "Usuário criado",
+        description: "Novo usuário foi criado com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao criar usuário.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<UserFormData> }) => {
+      return await apiRequest(`/api/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setUserDialogOpen(false);
+      setEditingUser(null);
+      form.reset();
+      toast({
+        title: "Usuário atualizado",
+        description: "Usuário foi atualizado com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar usuário.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/users/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Usuário removido",
+        description: "Usuário foi removido com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao remover usuário.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditUser = (user: UserType) => {
+    setEditingUser(user);
+    form.reset({
+      username: user.username,
+      password: "", // Don't pre-fill password
+      name: user.name,
+      role: user.role,
+      initials: user.initials,
+    });
+    setUserDialogOpen(true);
+  };
+
+  const handleDeleteUser = (id: number) => {
+    if (confirm("Tem certeza que deseja remover este usuário?")) {
+      deleteUserMutation.mutate(id);
+    }
+  };
+
+  const onSubmit = (data: UserFormData) => {
+    if (editingUser) {
+      updateUserMutation.mutate({ id: editingUser.id, data });
+    } else {
+      createUserMutation.mutate(data);
+    }
+  };
 
   const handleSaveSettings = () => {
     toast({
@@ -164,9 +303,148 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-medium">Usuários Ativos</h3>
-                      <Button className="bg-blue-600 hover:bg-blue-700">
-                        Adicionar Usuário
-                      </Button>
+                      <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => {
+                              setEditingUser(null);
+                              form.reset();
+                            }}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar Usuário
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="glass-morphism-dark border-white/10 max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>
+                              {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                            </DialogTitle>
+                          </DialogHeader>
+                          <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Nome Completo</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        placeholder="Nome do usuário" 
+                                        className="bg-gray-800/50 border-gray-600/30"
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="username"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Nome de Usuário</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        placeholder="usuario.nome" 
+                                        className="bg-gray-800/50 border-gray-600/30"
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>
+                                      {editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha"}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        type="password"
+                                        placeholder="••••••••" 
+                                        className="bg-gray-800/50 border-gray-600/30"
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="role"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Cargo</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
+                                          <SelectValue placeholder="Selecione o cargo" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent className="glass-morphism-dark border-white/10">
+                                        <SelectItem value="Administradora">Administradora</SelectItem>
+                                        <SelectItem value="Assistente Social">Assistente Social</SelectItem>
+                                        <SelectItem value="Psicóloga">Psicóloga</SelectItem>
+                                        <SelectItem value="Advogado">Advogado</SelectItem>
+                                        <SelectItem value="Secretário">Secretário</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="initials"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Iniciais</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        placeholder="AC" 
+                                        className="bg-gray-800/50 border-gray-600/30"
+                                        maxLength={3}
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <div className="flex justify-end space-x-2 pt-4">
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => setUserDialogOpen(false)}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button 
+                                  type="submit" 
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                  disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                                >
+                                  {editingUser ? "Atualizar" : "Criar"}
+                                </Button>
+                              </div>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                     
                     <div className="overflow-x-auto">
@@ -174,37 +452,47 @@ export default function SettingsPage() {
                         <thead>
                           <tr className="border-b border-white/10">
                             <th className="text-left py-3 px-4 font-medium text-gray-300">Nome</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-300">Email</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-300">Usuário</th>
                             <th className="text-left py-3 px-4 font-medium text-gray-300">Cargo</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-300">Iniciais</th>
                             <th className="text-left py-3 px-4 font-medium text-gray-300">Ações</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="border-b border-white/5">
-                            <td className="py-4 px-4 text-white">Ana Costa</td>
-                            <td className="py-4 px-4 text-gray-300">ana.costa@unidade.gov.br</td>
-                            <td className="py-4 px-4 text-gray-300">Administradora</td>
-                            <td className="py-4 px-4">
-                              <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Ativo</span>
-                            </td>
-                            <td className="py-4 px-4">
-                              <Button size="sm" variant="outline" className="mr-2">Editar</Button>
-                              <Button size="sm" variant="outline" className="text-red-400">Desativar</Button>
-                            </td>
-                          </tr>
-                          <tr className="border-b border-white/5">
-                            <td className="py-4 px-4 text-white">Marco Silva</td>
-                            <td className="py-4 px-4 text-gray-300">marco.silva@unidade.gov.br</td>
-                            <td className="py-4 px-4 text-gray-300">Assistente Social</td>
-                            <td className="py-4 px-4">
-                              <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Ativo</span>
-                            </td>
-                            <td className="py-4 px-4">
-                              <Button size="sm" variant="outline" className="mr-2">Editar</Button>
-                              <Button size="sm" variant="outline" className="text-red-400">Desativar</Button>
-                            </td>
-                          </tr>
+                          {users.map((user) => (
+                            <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                              <td className="py-4 px-4 text-white">{user.name}</td>
+                              <td className="py-4 px-4 text-gray-300">{user.username}</td>
+                              <td className="py-4 px-4 text-gray-300">{user.role}</td>
+                              <td className="py-4 px-4">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">
+                                  {user.initials}
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleEditUser(user)}
+                                    className="hover:bg-blue-500/20"
+                                  >
+                                    <Edit className="w-3 h-3 mr-1" />
+                                    Editar
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleDeleteUser(user.id)}
+                                    className="text-red-400 hover:bg-red-500/20"
+                                  >
+                                    <Trash2 className="w-3 h-3 mr-1" />
+                                    Remover
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>

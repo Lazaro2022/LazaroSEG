@@ -156,6 +156,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/users", async (req, res) => {
+    try {
+      const userData = req.body;
+      const user = await storage.createUser(userData);
+      res.status(201).json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const user = await storage.updateUser(id, updates);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteUser(id);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Export endpoints
+  app.get("/api/reports/export", async (req, res) => {
+    try {
+      const { format = 'json', period = 'last6months' } = req.query;
+      
+      const documents = await storage.getAllDocuments();
+      const servers = await storage.getAllServers();
+      const stats = await storage.getDashboardStats();
+      const typeStats = await storage.getDocumentTypeStats();
+      
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        period,
+        summary: stats,
+        documentTypes: typeStats,
+        documents: documents.map(doc => ({
+          id: doc.id,
+          processNumber: doc.processNumber,
+          prisonerName: doc.prisonerName,
+          type: doc.type,
+          status: doc.status,
+          deadline: doc.deadline,
+          assignedUser: doc.assignedUser?.name || 'Não atribuído',
+          createdAt: doc.createdAt,
+          completedAt: doc.completedAt
+        })),
+        productivity: servers.map(server => ({
+          name: server.user.name,
+          role: server.user.role,
+          totalDocuments: server.totalDocuments,
+          completedDocuments: server.completedDocuments,
+          completionPercentage: server.completionPercentage
+        }))
+      };
+
+      if (format === 'csv') {
+        // Convert to CSV format
+        let csv = 'ID,Número do Processo,Nome do Interno,Tipo,Status,Prazo,Responsável,Criado em,Concluído em\n';
+        documents.forEach(doc => {
+          csv += `${doc.id},"${doc.processNumber}","${doc.prisonerName}","${doc.type}","${doc.status}","${doc.deadline}","${doc.assignedUser?.name || 'Não atribuído'}","${doc.createdAt}","${doc.completedAt || ''}"\n`;
+        });
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="relatorio-documentos.csv"');
+        res.send(csv);
+      } else {
+        res.json(reportData);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
