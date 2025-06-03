@@ -83,8 +83,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const updates = req.body;
       
+      // Convert date strings to Date objects
+      if (updates.deadline && typeof updates.deadline === 'string') {
+        updates.deadline = new Date(updates.deadline);
+      }
+      if (updates.completedAt && typeof updates.completedAt === 'string') {
+        updates.completedAt = new Date(updates.completedAt);
+      }
+      
       // If marking as completed, set completedAt timestamp
-      if (updates.status === "Concluído") {
+      if (updates.status === "Concluído" && !updates.completedAt) {
         updates.completedAt = new Date();
       }
 
@@ -104,8 +112,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const updates = req.body;
       
+      // Convert date strings to Date objects
+      if (updates.deadline && typeof updates.deadline === 'string') {
+        updates.deadline = new Date(updates.deadline);
+      }
+      if (updates.completedAt && typeof updates.completedAt === 'string') {
+        updates.completedAt = new Date(updates.completedAt);
+      }
+      
       // If marking as completed, set completedAt timestamp
-      if (updates.status === "Concluído") {
+      if (updates.status === "Concluído" && !updates.completedAt) {
         updates.completedAt = new Date();
       }
 

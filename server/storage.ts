@@ -43,7 +43,8 @@ export class DatabaseStorage implements IStorage {
 
     // Create users
     const sampleUsers: InsertUser[] = [
-      { username: "ana.costa", password: "123456", name: "Ana Costa", role: "Administradora", initials: "AC" },
+      { username: "lazarus.admin", password: "admin123", name: "Lazarus", role: "Administrador do Sistema - Manaus/AM", initials: "LAZ" },
+      { username: "ana.costa", password: "123456", name: "Ana Costa", role: "Coordenadora Jurídica", initials: "AC" },
       { username: "marco.silva", password: "123456", name: "Marco Silva", role: "Assistente Social", initials: "MS" },
       { username: "lucia.ferreira", password: "123456", name: "Lucia Ferreira", role: "Psicóloga", initials: "LF" },
       { username: "roberto.castro", password: "123456", name: "Roberto Castro", role: "Advogado", initials: "RC" },
