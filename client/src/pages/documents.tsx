@@ -491,16 +491,21 @@ export default function DocumentsPage() {
           <Dialog open={isArchivedOpen} onOpenChange={setIsArchivedOpen}>
             <DialogContent className="glass-morphism-dark border-white/10 max-w-4xl">
               <DialogHeader>
-                <DialogTitle className="text-xl font-semibold">Nos Autos - Documentos Arquivados</DialogTitle>
-                <p className="text-gray-400 text-sm">Documentos que foram lidos e juntados no processo</p>
-              </DialogHeader>
-              <div className="max-h-96 overflow-y-auto">
-                <div className="text-center py-8">
-                  <Archive className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-400">Nenhum documento arquivado encontrado</p>
-                  <p className="text-gray-500 text-sm">Os documentos arquivados aparecerão aqui quando você arquivar documentos concluídos</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DialogTitle className="text-xl font-semibold">Nos Autos - Documentos Arquivados</DialogTitle>
+                    <p className="text-gray-400 text-sm">Documentos que foram lidos e juntados no processo</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsArchivedOpen(false)}
+                    className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
+                  >
+                    Voltar ao Menu
+                  </Button>
                 </div>
-              </div>
+              </DialogHeader>
+              <ArchivedDocumentsList />
             </DialogContent>
           </Dialog>
           </div>

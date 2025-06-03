@@ -53,6 +53,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/documents/archived", async (req, res) => {
+    try {
+      const archivedDocuments = await storage.getArchivedDocuments();
+      res.json(archivedDocuments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch archived documents" });
+    }
+  });
+
   app.get("/api/documents/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

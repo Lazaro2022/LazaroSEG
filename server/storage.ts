@@ -14,6 +14,7 @@ export interface IStorage {
   // Documents
   getDocument(id: number): Promise<DocumentWithUser | undefined>;
   getAllDocuments(): Promise<DocumentWithUser[]>;
+  getArchivedDocuments(): Promise<DocumentWithUser[]>;
   getRecentDocuments(limit?: number): Promise<DocumentWithUser[]>;
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: number, updates: Partial<Document>): Promise<Document | undefined>;
@@ -203,6 +204,39 @@ export class DatabaseStorage implements IStorage {
     .from(documents)
     .leftJoin(users, eq(documents.assignedTo, users.id))
     .orderBy(desc(documents.createdAt));
+
+    return docs.map(doc => ({
+      ...doc,
+      assignedUser: doc.assignedUser?.id ? doc.assignedUser : undefined
+    }));
+  }
+
+  async getArchivedDocuments(): Promise<DocumentWithUser[]> {
+    const docs = await db.select({
+      id: documents.id,
+      processNumber: documents.processNumber,
+      prisonerName: documents.prisonerName,
+      type: documents.type,
+      deadline: documents.deadline,
+      status: documents.status,
+      assignedTo: documents.assignedTo,
+      createdAt: documents.createdAt,
+      completedAt: documents.completedAt,
+      archivedAt: documents.archivedAt,
+      isArchived: documents.isArchived,
+      assignedUser: {
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        name: users.name,
+        role: users.role,
+        initials: users.initials,
+      }
+    })
+    .from(documents)
+    .leftJoin(users, eq(documents.assignedTo, users.id))
+    .where(eq(documents.isArchived, true))
+    .orderBy(desc(documents.archivedAt));
 
     return docs.map(doc => ({
       ...doc,
