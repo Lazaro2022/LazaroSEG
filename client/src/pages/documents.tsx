@@ -230,8 +230,8 @@ export default function DocumentsPage() {
       <main className="flex-1 ml-64 flex flex-col">
         <Header />
         
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <div className="flex items-center justify-between">
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="mb-6 flex items-center justify-between">
             <h1 className="text-3xl font-bold">Gerenciamento de Documentos</h1>
             
             <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
@@ -365,7 +365,6 @@ export default function DocumentsPage() {
             </Dialog>
           </div>
 
-          {/* Main Content Card */}
           <Card className="glass-morphism">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
