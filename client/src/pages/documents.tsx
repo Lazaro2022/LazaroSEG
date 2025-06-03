@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, CheckCircle, Edit, Archive, CalendarIcon, Search } from "lucide-react";
+import { Plus, CheckCircle, Edit, Archive, CalendarIcon, Search, RotateCcw } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -59,6 +59,7 @@ export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewDocumentOpen, setIsNewDocumentOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentWithUser | null>(null);
+  const [isArchivedOpen, setIsArchivedOpen] = useState(false);
 
   const { data: documents, isLoading } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents"],
@@ -230,14 +231,24 @@ export default function DocumentsPage() {
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-3xl font-bold">Gerenciamento de Documentos</h1>
             
-            <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Documento
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="glass-morphism-dark border-white/10 max-w-md">
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="outline" 
+                className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
+                onClick={() => setIsArchivedOpen(true)}
+              >
+                <Archive className="w-4 h-4 mr-2" />
+                Nos Autos
+              </Button>
+
+              <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Documento
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="glass-morphism-dark border-white/10 max-w-md">
                 <DialogHeader>
                   <DialogTitle>Criar Novo Documento</DialogTitle>
                 </DialogHeader>
@@ -473,6 +484,23 @@ export default function DocumentsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Archived Documents Dialog */}
+          <Dialog open={isArchivedOpen} onOpenChange={setIsArchivedOpen}>
+            <DialogContent className="glass-morphism-dark border-white/10 max-w-4xl">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold">Nos Autos - Documentos Arquivados</DialogTitle>
+                <p className="text-gray-400 text-sm">Documentos que foram lidos e juntados no processo</p>
+              </DialogHeader>
+              <div className="max-h-96 overflow-y-auto">
+                <div className="text-center py-8">
+                  <Archive className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-400">Nenhum documento arquivado encontrado</p>
+                  <p className="text-gray-500 text-sm">Os documentos arquivados aparecerão aqui quando você arquivar documentos concluídos</p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
 
