@@ -303,8 +303,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reports
   app.get("/api/reports/productivity", async (req, res) => {
     try {
-      const report = await generateProductivityReport();
-      res.json(report);
+      // Force fresh data without cache
+      const activeDocuments = await storage.getAllDocuments();
+      const archivedDocuments = await storage.getArchivedDocuments();
+      const users = await storage.getAllUsers();
+      
+      const totalDocuments = activeDocuments.length + archivedDocuments.length;
+      const completedDocuments = activeDocuments.filter(doc => doc.status === 'Concluído').length + archivedDocuments.length;
+      const inProgressDocuments = activeDocuments.filter(doc => doc.status === 'Em Andamento').length;
+      
+      const now = new Date();
+      const overdueDocuments = activeDocuments.filter(doc => {
+        const deadline = new Date(doc.deadline);
+        return deadline < now && doc.status !== 'Concluído';
+      }).length;
+      
+      const completionRate = totalDocuments > 0 ? (completedDocuments / totalDocuments) * 100 : 0;
+      
+      // Quick report with real-time data
+      const quickReport = {
+        totalDocuments,
+        completedDocuments,
+        inProgressDocuments,
+        overdueDocuments,
+        averageCompletionTime: 0,
+        completionRate,
+        documentsByType: {
+          certidoes: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Certidão').length,
+          relatorios: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Relatório').length,
+          oficios: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Ofício').length,
+        },
+        dailyProduction: [],
+        monthlyTrends: [],
+        userProductivity: users.map(user => ({
+          userId: user.id,
+          userName: user.name,
+          totalDocuments: [...activeDocuments, ...archivedDocuments].filter(doc => doc.assignedTo === user.id).length,
+          completedDocuments: activeDocuments.filter(doc => doc.assignedTo === user.id && doc.status === 'Concluído').length + archivedDocuments.filter(doc => doc.assignedTo === user.id).length,
+          inProgressDocuments: activeDocuments.filter(doc => doc.assignedTo === user.id && doc.status === 'Em Andamento').length,
+          overdueDocuments: activeDocuments.filter(doc => {
+            if (doc.assignedTo !== user.id) return false;
+            const deadline = new Date(doc.deadline);
+            return deadline < now && doc.status !== 'Concluído';
+          }).length,
+          completionRate: 0,
+          averageCompletionTime: 0,
+          documentsByType: {
+            certidoes: 0,
+            relatorios: 0,
+            oficios: 0,
+          },
+          monthlyProduction: [],
+        }))
+      };
+      
+      res.json(quickReport);
     } catch (error) {
       console.error('Error generating productivity report:', error);
       res.status(500).json({ message: "Failed to generate productivity report" });
