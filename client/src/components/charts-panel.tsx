@@ -42,65 +42,60 @@ export function ChartsPanel() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Pie Chart */}
-      <Card className="glass-morphism">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Documentos por Tipo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            
-            {/* Center text */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{total}</div>
-                <div className="text-sm text-gray-400">Total</div>
-              </div>
+    <Card className="glass-morphism max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="text-xl font-semibold">Documentos por Tipo</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="relative h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          
+          {/* Center text */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white">{total}</div>
+              <div className="text-sm text-gray-400">Total</div>
             </div>
           </div>
-          
-          {/* Legend */}
-          <div className="mt-6 space-y-2">
-            {chartData.map((item) => {
-              const percentage = total > 0 ? Math.round((item.value / total) * 100) : 0;
-              return (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="text-sm text-gray-300">{item.name}</span>
-                  </div>
-                  <span className="text-sm font-medium text-white">
-                    {item.value} ({percentage}%)
-                  </span>
+        </div>
+        
+        {/* Legend */}
+        <div className="mt-6 space-y-2">
+          {chartData.map((item) => {
+            const percentage = total > 0 ? Math.round((item.value / total) * 100) : 0;
+            return (
+              <div key={item.name} className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: item.color }}
+                  ></div>
+                  <span className="text-sm text-gray-300">{item.name}</span>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-
-    </div>
+                <span className="text-sm font-medium text-white">
+                  {item.value} ({percentage}%)
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
