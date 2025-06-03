@@ -110,6 +110,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/documents/:id/archive", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const archived = await storage.archiveDocument(id);
+      if (!archived) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      res.json(archived);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to archive document" });
+    }
+  });
+
+  app.post("/api/documents/:id/restore", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const restored = await storage.restoreDocument(id);
+      if (!restored) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      res.json(restored);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to restore document" });
+    }
+  });
+
   // Servers/Productivity
   app.get("/api/servers", async (req, res) => {
     try {

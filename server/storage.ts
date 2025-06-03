@@ -220,6 +220,8 @@ export class DatabaseStorage implements IStorage {
       assignedTo: documents.assignedTo,
       createdAt: documents.createdAt,
       completedAt: documents.completedAt,
+      archivedAt: documents.archivedAt,
+      isArchived: documents.isArchived,
       assignedUser: {
         id: users.id,
         username: users.username,
