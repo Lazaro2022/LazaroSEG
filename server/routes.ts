@@ -309,6 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getAllUsers();
       
       const totalDocuments = activeDocuments.length + archivedDocuments.length;
+      // Documentos concluídos = status 'Concluído' + todos os arquivados
       const completedDocuments = activeDocuments.filter(doc => doc.status === 'Concluído').length + archivedDocuments.length;
       const inProgressDocuments = activeDocuments.filter(doc => doc.status === 'Em Andamento').length;
       
