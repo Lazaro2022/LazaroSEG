@@ -80,9 +80,42 @@ export default function ReportsPage() {
     { name: 'Ofícios', value: typeStats.oficios, color: '#f59e0b' },
   ] : [];
 
-  const handleExportReport = () => {
-    // In a real implementation, this would generate and download a PDF or Excel file
-    alert("Funcionalidade de exportação será implementada em breve.");
+  const handleExportReport = async (format: 'json' | 'csv' = 'csv') => {
+    try {
+      const response = await fetch(`/api/reports/export?format=${format}&period=last6months`);
+      
+      if (!response.ok) {
+        throw new Error('Falha ao gerar relatório');
+      }
+
+      if (format === 'csv') {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `relatorio-documentos-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const data = await response.json();
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = window.URL.createObjectURL(dataBlob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `relatorio-documentos-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      alert('Erro ao exportar relatório. Tente novamente.');
+    }
   };
 
   return (
@@ -109,7 +142,7 @@ export default function ReportsPage() {
               </Select>
               
               <Button 
-                onClick={handleExportReport}
+                onClick={() => handleExportReport('csv')}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Download className="w-4 h-4 mr-2" />

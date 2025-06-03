@@ -81,10 +81,13 @@ export default function SettingsPage() {
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<UserFormData> }) => {
-      return await apiRequest(`/api/users/${id}`, {
+      const response = await fetch(`/api/users/${id}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (!response.ok) throw new Error("Failed to update user");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -107,9 +110,11 @@ export default function SettingsPage() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/users/${id}`, {
+      const response = await fetch(`/api/users/${id}`, {
         method: "DELETE",
       });
+      if (!response.ok) throw new Error("Failed to delete user");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });

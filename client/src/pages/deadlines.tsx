@@ -2,21 +2,88 @@ import { Sidebar } from "@/components/sidebar";
 import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, AlertTriangle, CheckCircle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar, Clock, AlertTriangle, CheckCircle, Filter, Download, Mail, Archive } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import type { DocumentWithUser } from "@shared/schema";
 import { format, differenceInDays, isAfter, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 
 export default function DeadlinesPage() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   const { data: documents, isLoading } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents"],
   });
 
+  const updateDocumentMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
+      const response = await fetch(`/api/documents/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) throw new Error("Failed to update document");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Documento atualizado",
+        description: "Status do documento foi atualizado com sucesso.",
+      });
+    },
+  });
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({ ids, updates }: { ids: number[]; updates: any }) => {
+      await Promise.all(
+        ids.map(id =>
+          fetch(`/api/documents/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates),
+          })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setSelectedDocuments([]);
+      toast({
+        title: "Documentos atualizados",
+        description: `${selectedDocuments.length} documentos foram atualizados.`,
+      });
+    },
+  });
+
   const now = new Date();
-  
-  // Categorize documents by deadline urgency
-  const categorizedDocuments = documents?.reduce((acc, doc) => {
+
+  // Filter and search functions
+  const filteredDocuments = documents?.filter(doc => {
+    const matchesSearch = searchTerm === "" || 
+      doc.processNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.prisonerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.assignedUser?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = filterType === "all" || doc.type === filterType;
+    const matchesStatus = filterStatus === "all" || doc.status === filterStatus;
+    
+    return matchesSearch && matchesType && matchesStatus;
+  }) || [];
+
+  // Categorize filtered documents by deadline urgency
+  const categorizedDocuments = filteredDocuments.reduce((acc, doc) => {
     if (doc.status === "Concluído") {
       acc.completed.push(doc);
       return acc;
@@ -42,12 +109,65 @@ export default function DeadlinesPage() {
     thisWeek: [] as DocumentWithUser[],
     upcoming: [] as DocumentWithUser[],
     completed: [] as DocumentWithUser[],
-  }) || {
-    overdue: [],
-    urgent: [],
-    thisWeek: [],
-    upcoming: [],
-    completed: [],
+  });
+
+  // Helper functions
+  const handleSelectDocument = (id: number) => {
+    setSelectedDocuments(prev => 
+      prev.includes(id) 
+        ? prev.filter(docId => docId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (documentList: DocumentWithUser[]) => {
+    const allIds = documentList.map(doc => doc.id);
+    const allSelected = allIds.every(id => selectedDocuments.includes(id));
+    
+    if (allSelected) {
+      setSelectedDocuments(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedDocuments(prev => Array.from(new Set([...prev, ...allIds])));
+    }
+  };
+
+  const handleBulkStatusUpdate = (status: string) => {
+    if (selectedDocuments.length === 0) return;
+    
+    bulkUpdateMutation.mutate({
+      ids: selectedDocuments,
+      updates: { status, completedAt: status === "Concluído" ? new Date() : null }
+    });
+  };
+
+  const handleMarkAsUrgent = () => {
+    if (selectedDocuments.length === 0) return;
+    
+    bulkUpdateMutation.mutate({
+      ids: selectedDocuments,
+      updates: { status: "Urgente" }
+    });
+  };
+
+  const exportSelectedDocuments = async () => {
+    if (selectedDocuments.length === 0) return;
+    
+    const selectedDocs = documents?.filter(doc => selectedDocuments.includes(doc.id)) || [];
+    
+    let csv = 'ID,Número do Processo,Nome do Interno,Tipo,Status,Prazo,Responsável,Dias até Vencimento\n';
+    selectedDocs.forEach(doc => {
+      const deadline = new Date(doc.deadline);
+      const daysUntil = differenceInDays(deadline, now);
+      csv += `${doc.id},"${doc.processNumber}","${doc.prisonerName}","${doc.type}","${doc.status}","${format(deadline, 'dd/MM/yyyy')}","${doc.assignedUser?.name || 'Não atribuído'}","${daysUntil}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `documentos-selecionados-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const getStatusBadge = (document: DocumentWithUser) => {
@@ -143,7 +263,98 @@ export default function DeadlinesPage() {
         <Header />
         
         <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <h1 className="text-3xl font-bold">Controle de Prazos</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Controle de Prazos</h1>
+            
+            {selectedDocuments.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">
+                  {selectedDocuments.length} documento(s) selecionado(s)
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkStatusUpdate("Concluído")}
+                  className="bg-green-600/20 text-green-400 border-green-600/30 hover:bg-green-600/30"
+                >
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Marcar Concluído
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleMarkAsUrgent}
+                  className="bg-red-600/20 text-red-400 border-red-600/30 hover:bg-red-600/30"
+                >
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  Marcar Urgente
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={exportSelectedDocuments}
+                  className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  Exportar
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Filters and Search */}
+          <Card className="glass-morphism">
+            <CardContent className="p-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex-1 min-w-64">
+                  <Input
+                    placeholder="Buscar por processo, interno ou responsável..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-gray-800/50 border-gray-600/30"
+                  />
+                </div>
+                
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-48 bg-gray-800/50 border-gray-600/30">
+                    <SelectValue placeholder="Tipo de documento" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-morphism-dark border-white/10">
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    <SelectItem value="Certidão">Certidão</SelectItem>
+                    <SelectItem value="Relatório">Relatório</SelectItem>
+                    <SelectItem value="Ofício">Ofício</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-48 bg-gray-800/50 border-gray-600/30">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-morphism-dark border-white/10">
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="Urgente">Urgente</SelectItem>
+                    <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                    <SelectItem value="Concluído">Concluído</SelectItem>
+                    <SelectItem value="Vencido">Vencido</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilterType("all");
+                    setFilterStatus("all");
+                  }}
+                  className="bg-gray-800/50 border-gray-600/30"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Limpar Filtros
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
