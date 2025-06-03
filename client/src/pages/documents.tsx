@@ -530,7 +530,11 @@ export default function DocumentsPage() {
                     </div>
                     <Button
                       variant="outline"
-                      onClick={() => setIsArchivedOpen(false)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsArchivedOpen(false);
+                      }}
                       className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600 hover:text-white"
                     >
                       Voltar ao Menu
