@@ -69,6 +69,90 @@ function generateMonthlyTrends(documents: any[]) {
   return last6Months;
 }
 
+function generateRealDailyProduction(documents: any[]) {
+  const last7Days = [];
+  const now = new Date();
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Conta documentos criados neste dia
+    const created = documents.filter(doc => 
+      doc.createdAt && doc.createdAt.toISOString().split('T')[0] === dateStr
+    ).length;
+    
+    // Conta documentos concluídos (status Concluído OU arquivados) neste dia
+    const completed = documents.filter(doc => {
+      // Se está arquivado, conta pela data de arquivamento
+      if (doc.isArchived && doc.archivedAt) {
+        return doc.archivedAt.toISOString().split('T')[0] === dateStr;
+      }
+      // Se status é Concluído, conta pela data de atualização
+      if (doc.status === 'Concluído' && doc.updatedAt) {
+        return doc.updatedAt.toISOString().split('T')[0] === dateStr;
+      }
+      return false;
+    }).length;
+    
+    last7Days.push({
+      date: `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`,
+      created,
+      completed
+    });
+  }
+  
+  return last7Days;
+}
+
+function generateRealMonthlyTrends(documents: any[]) {
+  const last6Months = [];
+  const now = new Date();
+  
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    
+    // Conta documentos criados neste mês
+    const created = documents.filter(doc => {
+      if (!doc.createdAt) return false;
+      const createdDate = new Date(doc.createdAt);
+      return createdDate >= date && createdDate <= nextMonth;
+    }).length;
+    
+    // Conta documentos concluídos (status Concluído OU arquivados) neste mês
+    const completed = documents.filter(doc => {
+      let completionDate = null;
+      
+      // Se está arquivado, usa data de arquivamento
+      if (doc.isArchived && doc.archivedAt) {
+        completionDate = new Date(doc.archivedAt);
+      }
+      // Se status é Concluído, usa data de atualização
+      else if (doc.status === 'Concluído' && doc.updatedAt) {
+        completionDate = new Date(doc.updatedAt);
+      }
+      
+      if (completionDate) {
+        return completionDate >= date && completionDate <= nextMonth;
+      }
+      return false;
+    }).length;
+    
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
+                       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    
+    last6Months.push({
+      month: `${monthNames[date.getMonth()]}/${date.getFullYear().toString().slice(-2)}`,
+      created,
+      completed
+    });
+  }
+  
+  return last6Months;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with sample data
   await storage.initializeData();
@@ -396,22 +480,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           relatorios: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Relatório').length,
           oficios: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Ofício').length,
         },
-        dailyProduction: [
-          { date: '01/06', created: 2, completed: 1 },
-          { date: '02/06', created: 1, completed: 2 },
-          { date: '03/06', created: 3, completed: 1 },
-          { date: '04/06', created: 0, completed: 1 },
-          { date: '05/06', created: 1, completed: 0 },
-          { date: '06/06', created: 2, completed: 1 }
-        ],
-        monthlyTrends: [
-          { month: 'Jan/25', created: 15, completed: 12 },
-          { month: 'Fev/25', created: 18, completed: 15 },
-          { month: 'Mar/25', created: 22, completed: 18 },
-          { month: 'Abr/25', created: 20, completed: 19 },
-          { month: 'Mai/25', created: 16, completed: 14 },
-          { month: 'Jun/25', created: 9, completed: 5 }
-        ],
+        dailyProduction: generateRealDailyProduction([...activeDocuments, ...archivedDocuments]),
+        monthlyTrends: generateRealMonthlyTrends([...activeDocuments, ...archivedDocuments]),
         userProductivity: users.map(user => ({
           userId: user.id,
           userName: user.name,
