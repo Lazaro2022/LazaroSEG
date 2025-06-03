@@ -100,10 +100,7 @@ export function ChartsPanel() {
         </CardContent>
       </Card>
 
-      {/* Productivity Panel */}
-      <div className="lg:col-span-2">
-        <ProductivityPanel />
-      </div>
+
     </div>
   );
 }
