@@ -228,20 +228,21 @@ export default function DocumentsPage() {
         <Header />
         
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Gerenciamento de Documentos</h1>
-            
-            <div className="flex items-center space-x-3">
-              <Button 
-                variant="outline" 
-                className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
-                onClick={() => setIsArchivedOpen(true)}
-              >
-                <Archive className="w-4 h-4 mr-2" />
-                Nos Autos
-              </Button>
+          <div className="space-y-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Gerenciamento de Documentos</h1>
+              
+              <div className="flex items-center space-x-3">
+                <Button 
+                  variant="outline" 
+                  className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
+                  onClick={() => setIsArchivedOpen(true)}
+                >
+                  <Archive className="w-4 h-4 mr-2" />
+                  Nos Autos
+                </Button>
 
-              <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
+                <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -370,9 +371,10 @@ export default function DocumentsPage() {
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
+              </div>
+            </div>
 
-          <Card className="glass-morphism">
+            <Card className="glass-morphism">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-semibold">
                 Todos os Documentos ({documents?.length || 0})
@@ -501,6 +503,7 @@ export default function DocumentsPage() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </main>
 
