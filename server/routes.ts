@@ -173,6 +173,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/documents/:id/restore", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.restoreDocument(id);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to restore document" });
+    }
+  });
+
   app.post("/api/documents/:id/restore", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
