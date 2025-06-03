@@ -46,6 +46,9 @@ const cardConfigs = [
 export function KpiCards() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+    refetchInterval: 2000, // Atualiza a cada 2 segundos
+    refetchOnWindowFocus: true, // Atualiza quando a janela recebe foco
+    staleTime: 0, // Considera dados sempre desatualizados
   });
 
   if (isLoading) {
