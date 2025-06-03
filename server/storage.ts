@@ -398,14 +398,7 @@ export class DatabaseStorage implements IStorage {
     const completedActive = activeDocuments.filter(doc => doc.status === "Concluído").length;
     const completed = completedActive + archivedDocuments.length;
     
-    // Log para debug
-    console.log('Dashboard Stats Debug:', {
-      activeDocuments: activeDocuments.length,
-      archivedDocuments: archivedDocuments.length,
-      completedActive,
-      totalCompleted: completed,
-      inProgress
-    });
+
     
     // Documentos vencidos (apenas entre os ativos)
     const now = new Date();
