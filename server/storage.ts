@@ -1,4 +1,6 @@
 import { users, documents, servers, type User, type InsertUser, type Document, type InsertDocument, type Server, type InsertServer, type DocumentWithUser, type ServerWithUser, type DashboardStats, type DocumentTypeStats } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, gte, lte, ne, gt, count } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -27,27 +29,14 @@ export interface IStorage {
   getNextDeadline(): Promise<Date | null>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private documents: Map<number, Document>;
-  private servers: Map<number, Server>;
-  private currentUserId: number;
-  private currentDocumentId: number;
-  private currentServerId: number;
+export class DatabaseStorage implements IStorage {
+  async initializeData() {
+    // Check if data already exists
+    const existingUsers = await db.select().from(users).limit(1);
+    if (existingUsers.length > 0) {
+      return; // Data already initialized
+    }
 
-  constructor() {
-    this.users = new Map();
-    this.documents = new Map();
-    this.servers = new Map();
-    this.currentUserId = 1;
-    this.currentDocumentId = 1;
-    this.currentServerId = 1;
-
-    // Initialize with sample data
-    this.initializeData();
-  }
-
-  private initializeData() {
     // Create users
     const sampleUsers: InsertUser[] = [
       { username: "ana.costa", password: "123456", name: "Ana Costa", role: "Administradora", initials: "AC" },
@@ -56,240 +45,324 @@ export class MemStorage implements IStorage {
       { username: "roberto.castro", password: "123456", name: "Roberto Castro", role: "Advogado", initials: "RC" },
     ];
 
-    sampleUsers.forEach(user => {
-      const id = this.currentUserId++;
-      this.users.set(id, { ...user, id });
-    });
+    const insertedUsers = await db.insert(users).values(sampleUsers).returning();
 
     // Create documents
     const now = new Date();
-    const sampleDocuments: InsertDocument[] = [
+    const sampleDocuments = [
       {
         processNumber: "2024.001.0156",
         prisonerName: "João Silva Santos",
         type: "Certidão",
-        deadline: new Date(now.getTime() + (1 * 24 * 60 * 60 * 1000)), // 1 day from now
+        deadline: new Date(now.getTime() + (1 * 24 * 60 * 60 * 1000)),
         status: "Urgente",
-        assignedTo: 1,
+        assignedTo: insertedUsers[0].id,
       },
       {
         processNumber: "2024.001.0157",
         prisonerName: "Maria Oliveira Costa",
         type: "Relatório",
-        deadline: new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000)), // 3 days from now
+        deadline: new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000)),
         status: "Em Andamento",
-        assignedTo: 2,
+        assignedTo: insertedUsers[1].id,
       },
       {
         processNumber: "2024.001.0158",
         prisonerName: "Carlos Eduardo Lima",
         type: "Ofício",
-        deadline: new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)), // 7 days from now
+        deadline: new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)),
         status: "Concluído",
-        assignedTo: 3,
+        assignedTo: insertedUsers[2].id,
       },
       {
         processNumber: "2024.001.0159",
         prisonerName: "Ana Paula Rodrigues",
         type: "Certidão",
-        deadline: new Date(now.getTime() + (5 * 24 * 60 * 60 * 1000)), // 5 days from now
+        deadline: new Date(now.getTime() + (5 * 24 * 60 * 60 * 1000)),
         status: "Em Andamento",
-        assignedTo: 1,
+        assignedTo: insertedUsers[0].id,
       },
       {
         processNumber: "2024.001.0160",
         prisonerName: "Fernando Santos Pereira",
         type: "Relatório",
-        deadline: new Date(now.getTime() - (2 * 24 * 60 * 60 * 1000)), // 2 days ago (overdue)
+        deadline: new Date(now.getTime() - (2 * 24 * 60 * 60 * 1000)),
         status: "Vencido",
-        assignedTo: 4,
+        assignedTo: insertedUsers[3].id,
       },
     ];
 
-    sampleDocuments.forEach(doc => {
-      const id = this.currentDocumentId++;
-      this.documents.set(id, { 
-        ...doc, 
-        id, 
-        createdAt: new Date(),
-        completedAt: doc.status === "Concluído" ? new Date() : null,
-        assignedTo: doc.assignedTo || null
-      });
-    });
+    await db.insert(documents).values(sampleDocuments);
 
     // Create servers/productivity data
-    const sampleServers: InsertServer[] = [
-      { userId: 1, totalDocuments: 127, completedDocuments: 119, completionPercentage: 94 },
-      { userId: 2, totalDocuments: 98, completedDocuments: 85, completionPercentage: 87 },
-      { userId: 3, totalDocuments: 156, completedDocuments: 119, completionPercentage: 76 },
-      { userId: 4, totalDocuments: 89, completedDocuments: 61, completionPercentage: 68 },
+    const sampleServers = [
+      { userId: insertedUsers[0].id, totalDocuments: 127, completedDocuments: 119, completionPercentage: 94 },
+      { userId: insertedUsers[1].id, totalDocuments: 98, completedDocuments: 85, completionPercentage: 87 },
+      { userId: insertedUsers[2].id, totalDocuments: 156, completedDocuments: 119, completionPercentage: 76 },
+      { userId: insertedUsers[3].id, totalDocuments: 89, completedDocuments: 61, completionPercentage: 68 },
     ];
 
-    sampleServers.forEach(server => {
-      const id = this.currentServerId++;
-      this.servers.set(id, { 
-        ...server, 
-        id,
-        totalDocuments: server.totalDocuments || 0,
-        completedDocuments: server.completedDocuments || 0,
-        completionPercentage: server.completionPercentage || 0
-      });
-    });
+    await db.insert(servers).values(sampleServers);
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await db.select().from(users);
   }
 
   // Document methods
   async getDocument(id: number): Promise<DocumentWithUser | undefined> {
-    const doc = this.documents.get(id);
+    const [doc] = await db.select({
+      id: documents.id,
+      processNumber: documents.processNumber,
+      prisonerName: documents.prisonerName,
+      type: documents.type,
+      deadline: documents.deadline,
+      status: documents.status,
+      assignedTo: documents.assignedTo,
+      createdAt: documents.createdAt,
+      completedAt: documents.completedAt,
+      assignedUser: {
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        name: users.name,
+        role: users.role,
+        initials: users.initials,
+      }
+    })
+    .from(documents)
+    .leftJoin(users, eq(documents.assignedTo, users.id))
+    .where(eq(documents.id, id));
+
     if (!doc) return undefined;
 
-    const assignedUser = doc.assignedTo ? await this.getUser(doc.assignedTo) : undefined;
-    return { ...doc, assignedUser };
+    return {
+      ...doc,
+      assignedUser: doc.assignedUser?.id ? doc.assignedUser : undefined
+    };
   }
 
   async getAllDocuments(): Promise<DocumentWithUser[]> {
-    const docs = Array.from(this.documents.values());
-    const result: DocumentWithUser[] = [];
+    const docs = await db.select({
+      id: documents.id,
+      processNumber: documents.processNumber,
+      prisonerName: documents.prisonerName,
+      type: documents.type,
+      deadline: documents.deadline,
+      status: documents.status,
+      assignedTo: documents.assignedTo,
+      createdAt: documents.createdAt,
+      completedAt: documents.completedAt,
+      assignedUser: {
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        name: users.name,
+        role: users.role,
+        initials: users.initials,
+      }
+    })
+    .from(documents)
+    .leftJoin(users, eq(documents.assignedTo, users.id))
+    .orderBy(desc(documents.createdAt));
 
-    for (const doc of docs) {
-      const assignedUser = doc.assignedTo ? await this.getUser(doc.assignedTo) : undefined;
-      result.push({ ...doc, assignedUser });
-    }
-
-    return result;
+    return docs.map(doc => ({
+      ...doc,
+      assignedUser: doc.assignedUser.id ? doc.assignedUser : undefined
+    }));
   }
 
   async getRecentDocuments(limit: number = 10): Promise<DocumentWithUser[]> {
-    const allDocs = await this.getAllDocuments();
-    return allDocs
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, limit);
+    const docs = await db.select({
+      id: documents.id,
+      processNumber: documents.processNumber,
+      prisonerName: documents.prisonerName,
+      type: documents.type,
+      deadline: documents.deadline,
+      status: documents.status,
+      assignedTo: documents.assignedTo,
+      createdAt: documents.createdAt,
+      completedAt: documents.completedAt,
+      assignedUser: {
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        name: users.name,
+        role: users.role,
+        initials: users.initials,
+      }
+    })
+    .from(documents)
+    .leftJoin(users, eq(documents.assignedTo, users.id))
+    .orderBy(desc(documents.createdAt))
+    .limit(limit);
+
+    return docs.map(doc => ({
+      ...doc,
+      assignedUser: doc.assignedUser.id ? doc.assignedUser : undefined
+    }));
   }
 
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const id = this.currentDocumentId++;
-    const document: Document = { 
-      ...insertDocument, 
-      id, 
-      createdAt: new Date(),
-      completedAt: null,
+    const [document] = await db.insert(documents).values({
+      ...insertDocument,
       assignedTo: insertDocument.assignedTo || null
-    };
-    this.documents.set(id, document);
+    }).returning();
     return document;
   }
 
   async updateDocument(id: number, updates: Partial<Document>): Promise<Document | undefined> {
-    const doc = this.documents.get(id);
-    if (!doc) return undefined;
-
-    const updatedDoc = { ...doc, ...updates };
-    this.documents.set(id, updatedDoc);
-    return updatedDoc;
+    const [updatedDoc] = await db.update(documents)
+      .set(updates)
+      .where(eq(documents.id, id))
+      .returning();
+    return updatedDoc || undefined;
   }
 
   async deleteDocument(id: number): Promise<boolean> {
-    return this.documents.delete(id);
+    const result = await db.delete(documents).where(eq(documents.id, id));
+    return result.rowCount > 0;
   }
 
   // Server methods
   async getServer(id: number): Promise<ServerWithUser | undefined> {
-    const server = this.servers.get(id);
-    if (!server) return undefined;
+    const [result] = await db.select({
+      id: servers.id,
+      userId: servers.userId,
+      totalDocuments: servers.totalDocuments,
+      completedDocuments: servers.completedDocuments,
+      completionPercentage: servers.completionPercentage,
+      user: {
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        name: users.name,
+        role: users.role,
+        initials: users.initials,
+      }
+    })
+    .from(servers)
+    .innerJoin(users, eq(servers.userId, users.id))
+    .where(eq(servers.id, id));
 
-    const user = await this.getUser(server.userId);
-    if (!user) return undefined;
-
-    return { ...server, user };
+    return result || undefined;
   }
 
   async getAllServers(): Promise<ServerWithUser[]> {
-    const servers = Array.from(this.servers.values());
-    const result: ServerWithUser[] = [];
-
-    for (const server of servers) {
-      const user = await this.getUser(server.userId);
-      if (user) {
-        result.push({ ...server, user });
+    return await db.select({
+      id: servers.id,
+      userId: servers.userId,
+      totalDocuments: servers.totalDocuments,
+      completedDocuments: servers.completedDocuments,
+      completionPercentage: servers.completionPercentage,
+      user: {
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        name: users.name,
+        role: users.role,
+        initials: users.initials,
       }
-    }
-
-    return result;
+    })
+    .from(servers)
+    .innerJoin(users, eq(servers.userId, users.id));
   }
 
   async createServer(insertServer: InsertServer): Promise<Server> {
-    const id = this.currentServerId++;
-    const server: Server = { 
-      ...insertServer, 
-      id,
+    const [server] = await db.insert(servers).values({
+      ...insertServer,
       totalDocuments: insertServer.totalDocuments || 0,
       completedDocuments: insertServer.completedDocuments || 0,
       completionPercentage: insertServer.completionPercentage || 0
-    };
-    this.servers.set(id, server);
+    }).returning();
     return server;
   }
 
   async updateServer(id: number, updates: Partial<Server>): Promise<Server | undefined> {
-    const server = this.servers.get(id);
-    if (!server) return undefined;
-
-    const updatedServer = { ...server, ...updates };
-    this.servers.set(id, updatedServer);
-    return updatedServer;
+    const [updatedServer] = await db.update(servers)
+      .set(updates)
+      .where(eq(servers.id, id))
+      .returning();
+    return updatedServer || undefined;
   }
 
   // Dashboard stats methods
   async getDashboardStats(): Promise<DashboardStats> {
-    const docs = Array.from(this.documents.values());
-    
+    const [stats] = await db.select({
+      totalDocuments: db.$count(documents.id),
+    }).from(documents);
+
+    const [inProgressStats] = await db.select({
+      count: db.$count(documents.id),
+    }).from(documents).where(eq(documents.status, "Em Andamento"));
+
+    const [completedStats] = await db.select({
+      count: db.$count(documents.id),
+    }).from(documents).where(eq(documents.status, "Concluído"));
+
+    const [overdueStats] = await db.select({
+      count: db.$count(documents.id),
+    }).from(documents).where(eq(documents.status, "Vencido"));
+
     return {
-      totalDocuments: docs.length,
-      inProgress: docs.filter(d => d.status === "Em Andamento").length,
-      completed: docs.filter(d => d.status === "Concluído").length,
-      overdue: docs.filter(d => d.status === "Vencido").length,
+      totalDocuments: stats.totalDocuments,
+      inProgress: inProgressStats.count,
+      completed: completedStats.count,
+      overdue: overdueStats.count,
     };
   }
 
   async getDocumentTypeStats(): Promise<DocumentTypeStats> {
-    const docs = Array.from(this.documents.values());
-    
+    const [certidoesStats] = await db.select({
+      count: db.$count(documents.id),
+    }).from(documents).where(eq(documents.type, "Certidão"));
+
+    const [relatoriosStats] = await db.select({
+      count: db.$count(documents.id),
+    }).from(documents).where(eq(documents.type, "Relatório"));
+
+    const [oficiosStats] = await db.select({
+      count: db.$count(documents.id),
+    }).from(documents).where(eq(documents.type, "Ofício"));
+
     return {
-      certidoes: docs.filter(d => d.type === "Certidão").length,
-      relatorios: docs.filter(d => d.type === "Relatório").length,
-      oficios: docs.filter(d => d.type === "Ofício").length,
+      certidoes: certidoesStats.count,
+      relatorios: relatoriosStats.count,
+      oficios: oficiosStats.count,
     };
   }
 
   async getNextDeadline(): Promise<Date | null> {
-    const docs = Array.from(this.documents.values());
     const now = new Date();
-    
-    const upcomingDocs = docs
-      .filter(d => d.status !== "Concluído" && d.deadline > now)
-      .sort((a, b) => a.deadline.getTime() - b.deadline.getTime());
-    
-    return upcomingDocs.length > 0 ? upcomingDocs[0].deadline : null;
+    const [result] = await db.select({
+      deadline: documents.deadline,
+    })
+    .from(documents)
+    .where(and(
+      db.ne(documents.status, "Concluído"),
+      db.gt(documents.deadline, now)
+    ))
+    .orderBy(documents.deadline)
+    .limit(1);
+
+    return result?.deadline || null;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
