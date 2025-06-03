@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -276,7 +278,12 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="flex h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="container mx-auto max-w-7xl space-y-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -480,6 +487,9 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

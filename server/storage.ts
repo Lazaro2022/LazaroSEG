@@ -203,6 +203,7 @@ export class DatabaseStorage implements IStorage {
     })
     .from(documents)
     .leftJoin(users, eq(documents.assignedTo, users.id))
+    .where(eq(documents.isArchived, false))
     .orderBy(desc(documents.createdAt));
 
     return docs.map(doc => ({
