@@ -33,7 +33,7 @@ export function Header() {
     queryKey: ["/api/documents"],
   });
 
-  const { data: systemSettings } = useQuery({
+  const { data: systemSettings } = useQuery<any>({
     queryKey: ["/api/settings"],
   });
 
@@ -219,12 +219,64 @@ export function Header() {
           {/* User Avatar */}
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              <div className="text-sm font-medium">Dr. Carlos Silva</div>
+              <div className="flex items-center space-x-2">
+                <div className="text-sm font-medium">
+                  {systemSettings?.admin_name || "Lazarus"}
+                </div>
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+                      onClick={() => {
+                        setAdminName(systemSettings?.admin_name || "Lazarus");
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-morphism-dark border-white/10 max-w-sm">
+                    <DialogHeader>
+                      <DialogTitle>Editar Nome do Administrador</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="adminName">Nome do Administrador</Label>
+                        <Input
+                          id="adminName"
+                          value={adminName}
+                          onChange={(e) => setAdminName(e.target.value)}
+                          className="bg-gray-800/50 border-gray-600/30"
+                          placeholder="Digite o nome do administrador"
+                        />
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setIsEditDialogOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => updateAdminMutation.mutate(adminName)}
+                          disabled={updateAdminMutation.isPending || !adminName.trim()}
+                        >
+                          {updateAdminMutation.isPending ? "Salvando..." : "Salvar"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <div className="text-xs text-gray-400">Administrador</div>
             </div>
             <Avatar className="w-10 h-10 border-2 border-[hsl(var(--neon-turquoise))]">
               <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                CS
+                {(systemSettings?.admin_name || "Lazarus").split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </div>
