@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
+import { generatePDFReport, generateProductivityReport } from "./reports";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with sample data
@@ -93,6 +94,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(document);
     } catch (error) {
+      console.error('Error updating document:', error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.put("/api/documents/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      // If marking as completed, set completedAt timestamp
+      if (updates.status === "Concluído") {
+        updates.completedAt = new Date();
+      }
+
+      const document = await storage.updateDocument(id, updates);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      console.error('Error updating document:', error);
       res.status(500).json({ message: "Failed to update document" });
     }
   });
