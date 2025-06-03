@@ -5,6 +5,8 @@ import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database with sample data
+  await storage.initializeData();
   // Dashboard stats
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

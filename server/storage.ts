@@ -184,7 +184,7 @@ export class DatabaseStorage implements IStorage {
 
     return docs.map(doc => ({
       ...doc,
-      assignedUser: doc.assignedUser.id ? doc.assignedUser : undefined
+      assignedUser: doc.assignedUser?.id ? doc.assignedUser : undefined
     }));
   }
 
@@ -215,7 +215,7 @@ export class DatabaseStorage implements IStorage {
 
     return docs.map(doc => ({
       ...doc,
-      assignedUser: doc.assignedUser.id ? doc.assignedUser : undefined
+      assignedUser: doc.assignedUser?.id ? doc.assignedUser : undefined
     }));
   }
 
@@ -237,7 +237,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDocument(id: number): Promise<boolean> {
     const result = await db.delete(documents).where(eq(documents.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Server methods
@@ -305,19 +305,19 @@ export class DatabaseStorage implements IStorage {
   // Dashboard stats methods
   async getDashboardStats(): Promise<DashboardStats> {
     const [stats] = await db.select({
-      totalDocuments: db.$count(documents.id),
+      totalDocuments: count(documents.id),
     }).from(documents);
 
     const [inProgressStats] = await db.select({
-      count: db.$count(documents.id),
+      count: count(documents.id),
     }).from(documents).where(eq(documents.status, "Em Andamento"));
 
     const [completedStats] = await db.select({
-      count: db.$count(documents.id),
+      count: count(documents.id),
     }).from(documents).where(eq(documents.status, "Concluído"));
 
     const [overdueStats] = await db.select({
-      count: db.$count(documents.id),
+      count: count(documents.id),
     }).from(documents).where(eq(documents.status, "Vencido"));
 
     return {
@@ -330,15 +330,15 @@ export class DatabaseStorage implements IStorage {
 
   async getDocumentTypeStats(): Promise<DocumentTypeStats> {
     const [certidoesStats] = await db.select({
-      count: db.$count(documents.id),
+      count: count(documents.id),
     }).from(documents).where(eq(documents.type, "Certidão"));
 
     const [relatoriosStats] = await db.select({
-      count: db.$count(documents.id),
+      count: count(documents.id),
     }).from(documents).where(eq(documents.type, "Relatório"));
 
     const [oficiosStats] = await db.select({
-      count: db.$count(documents.id),
+      count: count(documents.id),
     }).from(documents).where(eq(documents.type, "Ofício"));
 
     return {
@@ -355,8 +355,8 @@ export class DatabaseStorage implements IStorage {
     })
     .from(documents)
     .where(and(
-      db.ne(documents.status, "Concluído"),
-      db.gt(documents.deadline, now)
+      ne(documents.status, "Concluído"),
+      gt(documents.deadline, now)
     ))
     .orderBy(documents.deadline)
     .limit(1);
