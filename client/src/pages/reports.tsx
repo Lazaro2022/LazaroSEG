@@ -390,7 +390,11 @@ export default function ReportsPage() {
           <CardContent>
             <div className="h-64">
               {documentTypeData && (
-                <Doughnut data={documentTypeData} options={doughnutOptions} />
+                <Doughnut 
+                  key={`doughnut-${productivityData?.totalDocuments}-${productivityData?.completedDocuments}`}
+                  data={documentTypeData} 
+                  options={doughnutOptions} 
+                />
               )}
             </div>
           </CardContent>
@@ -407,7 +411,11 @@ export default function ReportsPage() {
           <CardContent>
             <div className="h-64">
               {dailyProductionData && (
-                <Line data={dailyProductionData} options={chartOptions} />
+                <Line 
+                  key={`line-${productivityData?.totalDocuments}-${productivityData?.completedDocuments}`}
+                  data={dailyProductionData} 
+                  options={chartOptions} 
+                />
               )}
             </div>
           </CardContent>
@@ -425,7 +433,11 @@ export default function ReportsPage() {
         <CardContent>
           <div className="h-80">
             {monthlyTrendsData && (
-              <Bar data={monthlyTrendsData} options={chartOptions} />
+              <Bar 
+                key={`bar-${productivityData?.totalDocuments}-${productivityData?.completedDocuments}`}
+                data={monthlyTrendsData} 
+                options={chartOptions} 
+              />
             )}
           </div>
         </CardContent>
