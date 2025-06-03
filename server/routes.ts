@@ -226,10 +226,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users", async (req, res) => {
     try {
       const userData = req.body;
+      console.log('Creating user with data:', userData);
       const user = await storage.createUser(userData);
       res.status(201).json(user);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create user" });
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: "Failed to create user", error: error.message });
     }
   });
 
@@ -237,26 +239,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+      console.log('Updating user:', id, 'with data:', updates);
       const user = await storage.updateUser(id, updates);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update user" });
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: "Failed to update user", error: error.message });
     }
   });
 
   app.delete("/api/users/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log('Deleting user:', id);
+      
+      // Check if user has assigned documents
+      const documents = await storage.getAllDocuments();
+      const userDocuments = documents.filter(doc => doc.assignedTo === id);
+      
+      if (userDocuments.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete user with assigned documents",
+          assignedDocuments: userDocuments.length
+        });
+      }
+      
       const success = await storage.deleteUser(id);
       if (!success) {
         return res.status(404).json({ message: "User not found" });
       }
       res.json({ message: "User deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete user" });
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: "Failed to delete user", error: error.message });
     }
   });
 
