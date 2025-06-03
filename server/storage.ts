@@ -387,27 +387,38 @@ export class DatabaseStorage implements IStorage {
 
   // Dashboard stats methods
   async getDashboardStats(): Promise<DashboardStats> {
-    const [stats] = await db.select({
-      totalDocuments: count(documents.id),
-    }).from(documents);
-
-    const [inProgressStats] = await db.select({
-      count: count(documents.id),
-    }).from(documents).where(eq(documents.status, "Em Andamento"));
-
-    const [completedStats] = await db.select({
-      count: count(documents.id),
-    }).from(documents).where(eq(documents.status, "Concluído"));
-
-    const [overdueStats] = await db.select({
-      count: count(documents.id),
-    }).from(documents).where(eq(documents.status, "Vencido"));
+    // Busca documentos ativos e arquivados separadamente
+    const activeDocuments = await this.getAllDocuments();
+    const archivedDocuments = await this.getArchivedDocuments();
+    
+    const totalDocuments = activeDocuments.length + archivedDocuments.length;
+    const inProgress = activeDocuments.filter(doc => doc.status === "Em Andamento").length;
+    
+    // Documentos concluídos = status 'Concluído' + todos os arquivados
+    const completedActive = activeDocuments.filter(doc => doc.status === "Concluído").length;
+    const completed = completedActive + archivedDocuments.length;
+    
+    // Log para debug
+    console.log('Dashboard Stats Debug:', {
+      activeDocuments: activeDocuments.length,
+      archivedDocuments: archivedDocuments.length,
+      completedActive,
+      totalCompleted: completed,
+      inProgress
+    });
+    
+    // Documentos vencidos (apenas entre os ativos)
+    const now = new Date();
+    const overdue = activeDocuments.filter(doc => {
+      const deadline = new Date(doc.deadline);
+      return deadline < now && doc.status !== 'Concluído';
+    }).length;
 
     return {
-      totalDocuments: stats.totalDocuments,
-      inProgress: inProgressStats.count,
-      completed: completedStats.count,
-      overdue: overdueStats.count,
+      totalDocuments,
+      inProgress,
+      completed,
+      overdue,
     };
   }
 
