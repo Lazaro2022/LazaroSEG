@@ -50,7 +50,9 @@ export interface SystemReport {
 }
 
 export async function generateProductivityReport(): Promise<SystemReport> {
-  const documents = await storage.getAllDocuments();
+  const allDocuments = await storage.getAllDocuments();
+  const archivedDocuments = await storage.getArchivedDocuments();
+  const documents = [...allDocuments, ...archivedDocuments];
   const users = await storage.getAllUsers();
   
   const now = new Date();
