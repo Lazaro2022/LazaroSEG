@@ -69,17 +69,12 @@ export default function DeadlinesPage() {
 
   const now = new Date();
 
-  // Filter and search functions
+  // Filter functions (search handled by header)
   const filteredDocuments = documents?.filter(doc => {
-    const matchesSearch = searchTerm === "" || 
-      doc.processNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.prisonerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.assignedUser?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesType = filterType === "all" || doc.type === filterType;
     const matchesStatus = filterStatus === "all" || doc.status === filterStatus;
     
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesType && matchesStatus;
   }) || [];
 
   // Categorize filtered documents by deadline urgency
@@ -305,19 +300,10 @@ export default function DeadlinesPage() {
             )}
           </div>
 
-          {/* Filters and Search */}
+          {/* Filters */}
           <Card className="glass-morphism">
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center gap-4">
-                <div className="flex-1 min-w-64">
-                  <Input
-                    placeholder="Buscar por processo, interno ou responsável..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-gray-800/50 border-gray-600/30"
-                  />
-                </div>
-                
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-48 bg-gray-800/50 border-gray-600/30">
                     <SelectValue placeholder="Tipo de documento" />
