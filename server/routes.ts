@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 import { generatePDFReport, generateProductivityReport } from "./pdf-generator";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with sample data
@@ -281,6 +283,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error generating PDF report:', error);
       res.status(500).json({ message: "Failed to generate PDF report" });
+    }
+  });
+
+  // System Settings
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const query = `SELECT * FROM system_settings ORDER BY id DESC LIMIT 1`;
+      const result = await db.execute(sql`SELECT * FROM system_settings ORDER BY id DESC LIMIT 1`);
+      const settings = result.rows[0] || {
+        system_name: 'Lazarus CG - Sistema de Controle',
+        institution: 'Unidade Prisional - Manaus/AM',
+        timezone: 'america/manaus',
+        language: 'pt-br',
+        urgent_days: 2,
+        warning_days: 7,
+        auto_archive: true
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    try {
+      const settings = req.body;
+      const query = `
+        INSERT INTO system_settings (system_name, institution, timezone, language, urgent_days, warning_days, auto_archive, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+        ON CONFLICT (id) DO UPDATE SET
+          system_name = EXCLUDED.system_name,
+          institution = EXCLUDED.institution,
+          timezone = EXCLUDED.timezone,
+          language = EXCLUDED.language,
+          urgent_days = EXCLUDED.urgent_days,
+          warning_days = EXCLUDED.warning_days,
+          auto_archive = EXCLUDED.auto_archive,
+          updated_at = NOW()
+        RETURNING *
+      `;
+      
+      const result = await db.execute(sql.raw(query, [
+        settings.systemName,
+        settings.institution,
+        settings.timezone,
+        settings.language,
+        settings.urgentDays,
+        settings.warningDays,
+        settings.autoArchive
+      ]));
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      res.status(500).json({ message: "Failed to save settings" });
     }
   });
 
