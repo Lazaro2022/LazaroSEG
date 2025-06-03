@@ -22,7 +22,7 @@ import { useState, useEffect } from "react";
 
 const userFormSchema = z.object({
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  password: z.string().optional(),
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   role: z.string().min(1, "Cargo é obrigatório"),
   initials: z.string().min(2, "Iniciais devem ter pelo menos 2 caracteres").max(3, "Iniciais devem ter no máximo 3 caracteres"),
@@ -215,10 +215,15 @@ export default function SettingsPage() {
   };
 
   const onSubmit = (data: UserFormData) => {
+    const submitData = {
+      ...data,
+      password: data.password || "123456" // Default password if not provided
+    };
+    
     if (editingUser) {
-      updateUserMutation.mutate({ id: editingUser.id, data });
+      updateUserMutation.mutate({ id: editingUser.id, data: submitData });
     } else {
-      createUserMutation.mutate(data);
+      createUserMutation.mutate(submitData);
     }
   };
 
@@ -459,17 +464,22 @@ export default function SettingsPage() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>
-                                      {editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha"}
+                                      {editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha (opcional - padrão: 123456)"}
                                     </FormLabel>
                                     <FormControl>
                                       <Input 
                                         type="password"
-                                        placeholder="••••••••" 
+                                        placeholder={editingUser ? "••••••••" : "Deixe vazio para senha padrão (123456)"} 
                                         className="bg-gray-800/50 border-gray-600/30"
                                         {...field} 
                                       />
                                     </FormControl>
                                     <FormMessage />
+                                    {!editingUser && (
+                                      <p className="text-xs text-gray-400">
+                                        Se não informar uma senha, será usado: 123456
+                                      </p>
+                                    )}
                                   </FormItem>
                                 )}
                               />

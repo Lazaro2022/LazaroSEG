@@ -231,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(user);
     } catch (error) {
       console.error('Error creating user:', error);
-      res.status(500).json({ message: "Failed to create user", error: error.message });
+      res.status(500).json({ message: "Failed to create user", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error('Error updating user:', error);
-      res.status(500).json({ message: "Failed to update user", error: error.message });
+      res.status(500).json({ message: "Failed to update user", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -274,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       console.error('Error deleting user:', error);
-      res.status(500).json({ message: "Failed to delete user", error: error.message });
+      res.status(500).json({ message: "Failed to delete user", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
