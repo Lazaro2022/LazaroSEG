@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { Search, Clock, User } from "lucide-react";
+import { Search, Clock, User, Edit3 } from "lucide-react";
 import { useCountdown } from "@/hooks/use-countdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { DocumentWithUser } from "@shared/schema";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,7 +19,11 @@ import { ptBR } from "date-fns/locale";
 export function Header() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [adminName, setAdminName] = useState("");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: nextDeadlineData } = useQuery({
     queryKey: ["/api/dashboard/next-deadline"],
@@ -22,6 +31,49 @@ export function Header() {
 
   const { data: documents } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents"],
+  });
+
+  const { data: systemSettings } = useQuery({
+    queryKey: ["/api/settings"],
+  });
+
+  const updateAdminMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const updatedSettings = {
+        system_name: systemSettings?.system_name || "Lazarus CG - Sistema de Controle",
+        institution: systemSettings?.institution || "Unidade Prisional - Manaus/AM",
+        admin_name: name,
+        timezone: systemSettings?.timezone || "america/manaus",
+        language: systemSettings?.language || "pt-br",
+        urgent_days: systemSettings?.urgent_days || 2,
+        warning_days: systemSettings?.warning_days || 7,
+        auto_archive: systemSettings?.auto_archive || true,
+      };
+      
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedSettings),
+      });
+      
+      if (!response.ok) throw new Error("Failed to update");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      setIsEditDialogOpen(false);
+      toast({
+        title: "Nome atualizado",
+        description: "Nome do administrador foi atualizado com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar nome do administrador.",
+        variant: "destructive",
+      });
+    },
   });
 
   const targetDate = nextDeadlineData?.deadline ? new Date(nextDeadlineData.deadline) : null;

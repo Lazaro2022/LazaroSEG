@@ -6,6 +6,7 @@ export const systemSettings = pgTable("system_settings", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   systemName: text("system_name").notNull().default("Lazarus CG - Sistema de Controle"),
   institution: text("institution").notNull().default("Unidade Prisional - Manaus/AM"),
+  adminName: text("admin_name").notNull().default("Lazarus"),
   timezone: text("timezone").notNull().default("america/manaus"),
   language: text("language").notNull().default("pt-br"),
   urgentDays: integer("urgent_days").notNull().default(2),
@@ -17,6 +18,7 @@ export const systemSettings = pgTable("system_settings", {
 export const insertSystemSettingsSchema = createInsertSchema(systemSettings).pick({
   systemName: true,
   institution: true,
+  adminName: true,
   timezone: true,
   language: true,
   urgentDays: true,
