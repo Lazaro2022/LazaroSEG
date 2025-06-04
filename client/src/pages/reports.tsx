@@ -81,10 +81,13 @@ export default function ReportsPage() {
   });
 
   const { data: productivityData, isLoading: isLoadingProductivity } = useQuery<ProductivityData>({
-    queryKey: ["/api/reports/productivity"],
-    refetchInterval: 2000, // Atualiza a cada 2 segundos
-    refetchOnWindowFocus: true, // Atualiza quando a janela recebe foco
-    staleTime: 0, // Considera dados sempre desatualizados
+    queryKey: ["/api/reports/productivity", Date.now()], // Força cache único
+    refetchInterval: 1000, // Atualiza a cada segundo
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: 0, // Nunca considera dados válidos
+    gcTime: 0, // Remove dados do cache imediatamente
   });
 
   const exportPDFMutation = useMutation({

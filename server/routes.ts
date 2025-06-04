@@ -504,6 +504,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }))
       };
       
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.json(quickReport);
     } catch (error) {
       console.error('Error generating productivity report:', error);
