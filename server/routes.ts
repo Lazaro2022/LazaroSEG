@@ -488,32 +488,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dailyProduction: generateRealDailyProduction([...activeDocuments, ...archivedDocuments]),
         monthlyTrends: generateRealMonthlyTrends([...activeDocuments, ...archivedDocuments]),
         userProductivity: users.map(user => {
-          const userActiveDocuments = activeDocuments.filter(doc => doc.assignedTo === user.id);
-          const userArchivedDocuments = archivedDocuments.filter(doc => doc.assignedTo === user.id);
-          const userAllDocuments = [...userActiveDocuments, ...userArchivedDocuments];
+          // Apenas documentos ativos (não arquivados) atribuídos ao usuário
+          const userDocuments = activeDocuments.filter(doc => doc.assignedTo === user.id);
           
-          const userCompletedDocuments = userActiveDocuments.filter(doc => doc.status === 'Concluído').length + userArchivedDocuments.length;
-          const userInProgressDocuments = userActiveDocuments.filter(doc => doc.status === 'Em Andamento').length;
-          const userOverdueDocuments = userActiveDocuments.filter(doc => {
+          const userCompletedDocuments = userDocuments.filter(doc => doc.status === 'Concluído').length;
+          const userInProgressDocuments = userDocuments.filter(doc => doc.status === 'Em Andamento').length;
+          const userOverdueDocuments = userDocuments.filter(doc => {
             const deadline = new Date(doc.deadline);
             return deadline < now && doc.status !== 'Concluído';
           }).length;
           
-          const userCompletionRate = userAllDocuments.length > 0 ? (userCompletedDocuments / userAllDocuments.length) * 100 : 0;
+          const userCompletionRate = userDocuments.length > 0 ? (userCompletedDocuments / userDocuments.length) * 100 : 0;
           
           return {
             userId: user.id,
             userName: user.name,
-            totalDocuments: userAllDocuments.length,
+            totalDocuments: userDocuments.length,
             completedDocuments: userCompletedDocuments,
             inProgressDocuments: userInProgressDocuments,
             overdueDocuments: userOverdueDocuments,
             completionRate: userCompletionRate,
             averageCompletionTime: 0,
             documentsByType: {
-              certidoes: userAllDocuments.filter(doc => doc.type === 'Certidão').length,
-              relatorios: userAllDocuments.filter(doc => doc.type === 'Relatório').length,
-              oficios: userAllDocuments.filter(doc => doc.type === 'Ofício').length,
+              certidoes: userDocuments.filter(doc => doc.type === 'Certidão').length,
+              relatorios: userDocuments.filter(doc => doc.type === 'Relatório').length,
+              oficios: userDocuments.filter(doc => doc.type === 'Ofício').length,
             },
             monthlyProduction: [],
           };
