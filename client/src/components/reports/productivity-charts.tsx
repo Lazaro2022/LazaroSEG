@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, LineChart, BarChart3 } from "lucide-react";
-import { Doughnut, Line, Bar } from 'react-chartjs-2';
+import { PieChart, FileText } from "lucide-react";
+import { Doughnut, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -51,6 +51,21 @@ interface ProductivityData {
     created: number;
     completed: number;
   }>;
+  userProductivity: Array<{
+    userId: number;
+    userName: string;
+    totalDocuments: number;
+    completedDocuments: number;
+    inProgressDocuments: number;
+    overdueDocuments: number;
+    completionRate: number;
+    averageCompletionTime: number;
+    documentsByType: {
+      certidoes: number;
+      relatorios: number;
+      oficios: number;
+    };
+  }>;
 }
 
 interface ProductivityChartsProps {
@@ -58,7 +73,7 @@ interface ProductivityChartsProps {
 }
 
 export function ProductivityCharts({ data }: ProductivityChartsProps) {
-  // Gráfico de distribuição por tipo (pizza)
+  // Gráfico de distribuição por tipo (pizza) - dados reais do banco
   const typeDistributionData = {
     labels: ['Certidões', 'Relatórios', 'Ofícios'],
     datasets: [{
@@ -81,11 +96,37 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
     }]
   };
 
+  // Gráfico de status dos documentos (barras) - dados reais
+  const statusData = {
+    labels: ['Em Andamento', 'Concluídos', 'Vencidos'],
+    datasets: [{
+      label: 'Quantidade de Documentos',
+      data: [
+        data.inProgressDocuments,
+        data.completedDocuments,
+        data.overdueDocuments
+      ],
+      backgroundColor: [
+        'rgba(245, 158, 11, 0.8)',   // Amarelo - Em Andamento
+        'rgba(16, 185, 129, 0.8)',   // Verde - Concluídos
+        'rgba(239, 68, 68, 0.8)'     // Vermelho - Vencidos
+      ],
+      borderColor: [
+        'rgb(245, 158, 11)',
+        'rgb(16, 185, 129)',
+        'rgb(239, 68, 68)'
+      ],
+      borderWidth: 2
+    }]
+  };
 
 
 
 
-  const chartOptions = {
+
+
+
+  const barChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -111,7 +152,8 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
       y: {
         beginAtZero: true,
         ticks: {
-          color: 'rgb(156, 163, 175)'
+          color: 'rgb(156, 163, 175)',
+          stepSize: 1
         },
         grid: {
           color: 'rgba(255, 255, 255, 0.1)'
@@ -138,9 +180,8 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Chart Section */}
+      {/* Primeira linha - Distribuição por tipo */}
       <div className="flex justify-center">
-        {/* Document Types Distribution */}
         <Card className="card-glass w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="text-white flex items-center justify-center gap-2">
@@ -149,7 +190,7 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className="h-64">
               <Doughnut 
                 data={typeDistributionData} 
                 options={doughnutOptions}
@@ -158,6 +199,28 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Segunda linha - Status dos documentos */}
+      <div className="flex justify-center">
+        <Card className="card-glass w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center justify-center gap-2">
+              <FileText className="w-5 h-5" />
+              Status dos Documentos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <Bar 
+                data={statusData} 
+                options={barChartOptions}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+
     </div>
   );
 }
