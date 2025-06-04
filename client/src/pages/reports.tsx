@@ -201,7 +201,7 @@ export default function ReportsPage() {
       },
       {
         label: 'Documentos Concluídos',
-        data: productivityData.dailyProduction.map(d => d.completed),
+        data: productivityData.dailyProduction.map(d => Number(d.completed) || 0), // Força zero
         borderColor: 'rgb(16, 185, 129)',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         fill: true,
@@ -222,7 +222,7 @@ export default function ReportsPage() {
       },
       {
         label: 'Documentos Concluídos',
-        data: productivityData.monthlyTrends.map(m => m.completed),
+        data: productivityData.monthlyTrends.map(m => Number(m.completed) || 0), // Força zero
         backgroundColor: 'rgba(16, 185, 129, 0.8)',
         borderColor: 'rgb(16, 185, 129)',
         borderWidth: 1

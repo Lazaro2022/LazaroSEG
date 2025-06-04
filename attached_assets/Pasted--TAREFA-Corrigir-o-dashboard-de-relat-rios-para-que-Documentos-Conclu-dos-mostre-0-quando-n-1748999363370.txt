@@ -1,0 +1,49 @@
+⚙️ TAREFA
+Corrigir o dashboard de relatórios para que “Documentos Concluídos” mostre **0** quando não existe nenhum registro com `status = 'Concluído'`.
+
+🗂️ ARQUIVOS/LOCAIS-CHAVE
+1. **server/controllers/reportController.ts**
+   - Funções `generateRealDailyProduction()` e `generateRealMonthlyTrends()`
+2. **server/routes/reportRoutes.ts**
+3. **client/src/pages/Reports/index.tsx** (ou onde estão os gráficos Chart.js/ECharts)
+
+🔍 PASSOS DETALHADOS
+1. **Banco de Dados**
+   1. Rodar:
+      ```sql
+      SELECT COUNT(*) FROM Documentos WHERE status = 'Concluído';
+      ```
+      - Se o resultado for **0**, prossiga.  
+      - Caso contrário, atualize esses registros para `status = 'Em Andamento'` ou equivalente.
+2. **Backend / API**
+   1. Em `reportController.ts`, ajuste todas as queries/agregações para contar **exclusivamente**:
+      ```ts
+      status: 'Concluído'
+      ```
+      (não use `status: { not: 'Em Andamento' }` nem `finishedAt: { not: null }`)
+   2. Garanta que o JSON de resposta devolva:
+      ```jsonc
+      {
+        "created": <number>,
+        "concluded": <number>   // deve ser 0 quando não houver concluídos
+      }
+      ```
+3. **Frontend**
+   1. Converta valores possivelmente nulos:
+      ```ts
+      const concluded = Number(data.concluded ?? 0);
+      ```
+   2. Se `concluded === 0`, zere a série dos gráficos (evita que Chart.js reaproveite dados antigos):
+      ```ts
+      datasets: concluded ? [concluded] : []
+      ```
+   3. Invalide o cache (React-Query/SWR) logo após qualquer mutation que altere documentos.
+4. **Deploy**
+   1. `npx prisma generate` (se Prisma)
+   2. `npm run build && npm run start`
+   3. Na aba **Deploys** do Replit, faça “Shut down & redeploy”.
+
+✅ CRITÉRIOS DE ACEITAÇÃO
+- Endpoint `/api/reports` retorna `"concluded": 0`.
+- Gráficos “Produção Diária”, “Tendências Mensais” e “Taxa de Conclusão” exibem 0 % e nenhuma barra/linha verde.
+- Depois de criar um documento com `status = 'Concluído'`, os valores verdes aparecem corretamente.
