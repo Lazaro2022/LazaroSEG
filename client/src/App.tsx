@@ -8,7 +8,7 @@ import { Header } from "@/components/header";
 import Dashboard from "@/pages/dashboard";
 import DocumentsPage from "@/pages/documents";
 import DeadlinesPage from "@/pages/deadlines";
-import ReportsPage from "@/pages/reports";
+import ReportsPage from "@/pages/reports-new";
 import SettingsPage from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
