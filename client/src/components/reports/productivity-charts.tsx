@@ -81,28 +81,7 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
     }]
   };
 
-  // Gráfico de produção diária (linha)
-  const dailyProductionData = {
-    labels: data.dailyProduction.map(d => d.date),
-    datasets: [
-      {
-        label: 'Documentos Criados',
-        data: data.dailyProduction.map(d => d.created),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4
-      },
-      {
-        label: 'Documentos Concluídos',
-        data: data.dailyProduction.map(d => d.completed),
-        borderColor: 'rgb(16, 185, 129)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        fill: true,
-        tension: 0.4
-      }
-    ]
-  };
+
 
 
 
@@ -159,18 +138,18 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Chart Section */}
+      <div className="flex justify-center">
         {/* Document Types Distribution */}
-        <Card className="card-glass">
+        <Card className="card-glass w-full max-w-2xl">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-white flex items-center justify-center gap-2">
               <PieChart className="w-5 h-5" />
-              Distribuição por Tipo
+              Distribuição por Tipo de Documento
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-80">
               <Doughnut 
                 data={typeDistributionData} 
                 options={doughnutOptions}
@@ -178,27 +157,7 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
             </div>
           </CardContent>
         </Card>
-
-        {/* Daily Production */}
-        <Card className="card-glass">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <LineChart className="w-5 h-5" />
-              Produção Diária (7 dias)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <Line 
-                data={dailyProductionData} 
-                options={chartOptions}
-              />
-            </div>
-          </CardContent>
-        </Card>
       </div>
-
-
     </div>
   );
 }
