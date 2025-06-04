@@ -11,21 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { DocumentWithUser } from "@shared/schema";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement, Filler } from 'chart.js';
-import { Line, Doughnut, Bar } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  BarElement,
-  Filler
-);
+import { ProductivityCharts } from "@/components/reports/productivity-charts";
 
 interface ProductivityData {
   totalDocuments: number;
@@ -165,121 +151,7 @@ export default function ReportsPage() {
     );
   }
 
-  // Chart configurations
-  const documentTypeData = productivityData ? {
-    labels: ['Certidões', 'Relatórios', 'Ofícios'],
-    datasets: [{
-      data: [
-        productivityData.documentsByType.certidoes,
-        productivityData.documentsByType.relatorios,
-        productivityData.documentsByType.oficios
-      ],
-      backgroundColor: [
-        'rgba(59, 130, 246, 0.8)',
-        'rgba(245, 158, 11, 0.8)',
-        'rgba(16, 185, 129, 0.8)'
-      ],
-      borderColor: [
-        'rgb(59, 130, 246)',
-        'rgb(245, 158, 11)',
-        'rgb(16, 185, 129)'
-      ],
-      borderWidth: 2
-    }]
-  } : null;
-
-  const dailyProductionData = productivityData ? {
-    labels: productivityData.dailyProduction.map(d => d.date),
-    datasets: [
-      {
-        label: 'Documentos Criados',
-        data: productivityData.dailyProduction.map(d => d.created),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4
-      },
-      {
-        label: 'Documentos Concluídos',
-        data: productivityData.dailyProduction.map(d => Number(d.completed) || 0), // Força zero
-        borderColor: 'rgb(16, 185, 129)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        fill: true,
-        tension: 0.4
-      }
-    ]
-  } : null;
-
-  const monthlyTrendsData = productivityData ? {
-    labels: productivityData.monthlyTrends.map(m => m.month),
-    datasets: [
-      {
-        label: 'Documentos Criados',
-        data: productivityData.monthlyTrends.map(m => m.created),
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 1
-      },
-      {
-        label: 'Documentos Concluídos',
-        data: productivityData.monthlyTrends.map(m => Number(m.completed) || 0), // Força zero
-        backgroundColor: 'rgba(16, 185, 129, 0.8)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 1
-      }
-    ]
-  } : null;
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          color: 'rgb(156, 163, 175)',
-          font: {
-            size: 12
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: 'rgb(156, 163, 175)'
-        },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
-        }
-      },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          color: 'rgb(156, 163, 175)'
-        },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
-        }
-      }
-    }
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          color: 'rgb(156, 163, 175)',
-          font: {
-            size: 12
-          }
-        }
-      }
-    }
-  };
+  // Remove all old chart configurations - using new component
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
@@ -378,71 +250,10 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Document Types Distribution */}
-        <Card className="card-glass">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <PieChart className="w-5 h-5" />
-              Distribuição por Tipo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              {documentTypeData && (
-                <Doughnut 
-                  key={`doughnut-${productivityData?.totalDocuments}-${productivityData?.completedDocuments}`}
-                  data={documentTypeData} 
-                  options={doughnutOptions} 
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Daily Production */}
-        <Card className="card-glass">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <LineChart className="w-5 h-5" />
-              Produção Diária (30 dias)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              {dailyProductionData && (
-                <Line 
-                  key={`line-${productivityData?.totalDocuments}-${productivityData?.completedDocuments}`}
-                  data={dailyProductionData} 
-                  options={chartOptions} 
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Monthly Trends */}
-      <Card className="card-glass">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Tendências Mensais (6 meses)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            {monthlyTrendsData && (
-              <Bar 
-                key={`bar-${productivityData?.totalDocuments}-${productivityData?.completedDocuments}`}
-                data={monthlyTrendsData} 
-                options={chartOptions} 
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* New Clean Charts Component */}
+      {productivityData && (
+        <ProductivityCharts data={productivityData} />
+      )}
 
       {/* User Productivity */}
       {productivityData?.userProductivity && (
