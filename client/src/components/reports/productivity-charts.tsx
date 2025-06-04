@@ -104,26 +104,7 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
     ]
   };
 
-  // Gráfico de tendências mensais (barras)
-  const monthlyTrendsData = {
-    labels: data.monthlyTrends.map(m => m.month),
-    datasets: [
-      {
-        label: 'Documentos Criados',
-        data: data.monthlyTrends.map(m => m.created),
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 1
-      },
-      {
-        label: 'Documentos Concluídos',
-        data: data.monthlyTrends.map(m => m.completed),
-        backgroundColor: 'rgba(16, 185, 129, 0.8)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 1
-      }
-    ]
-  };
+
 
   const chartOptions = {
     responsive: true,
@@ -217,23 +198,7 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
         </Card>
       </div>
 
-      {/* Monthly Trends */}
-      <Card className="card-glass">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Tendências Mensais (6 meses)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <Bar 
-              data={monthlyTrendsData} 
-              options={chartOptions}
-            />
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   );
 }
