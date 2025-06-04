@@ -83,23 +83,25 @@ function generateRealDailyProduction(documents: any[]) {
       doc.createdAt && doc.createdAt.toISOString().split('T')[0] === dateStr
     ).length;
     
-    // Conta documentos concluídos (status Concluído OU arquivados) neste dia
+    // Conta APENAS documentos que foram REALMENTE concluídos neste dia
+    // Como todos estão "Em Andamento", completed será sempre 0
     const completed = documents.filter(doc => {
-      // Se está arquivado, conta pela data de arquivamento
+      // Só conta se foi arquivado E tem data de arquivamento neste dia
       if (doc.isArchived && doc.archivedAt) {
         return doc.archivedAt.toISOString().split('T')[0] === dateStr;
       }
-      // Se status é Concluído, conta pela data de atualização
+      // Só conta se status é "Concluído" E foi atualizado neste dia
       if (doc.status === 'Concluído' && doc.updatedAt) {
         return doc.updatedAt.toISOString().split('T')[0] === dateStr;
       }
+      // Caso contrário, não conta (todos estão "Em Andamento")
       return false;
     }).length;
     
     last7Days.push({
       date: `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`,
       created,
-      completed
+      completed // Será sempre 0 porque nenhum documento foi concluído
     });
   }
   
@@ -121,22 +123,25 @@ function generateRealMonthlyTrends(documents: any[]) {
       return createdDate >= date && createdDate <= nextMonth;
     }).length;
     
-    // Conta documentos concluídos (status Concluído OU arquivados) neste mês
+    // Conta APENAS documentos que foram REALMENTE concluídos neste mês
+    // Como nenhum documento foi concluído, completed será sempre 0
     const completed = documents.filter(doc => {
       let completionDate = null;
       
-      // Se está arquivado, usa data de arquivamento
+      // Só conta se foi arquivado E tem data de arquivamento válida
       if (doc.isArchived && doc.archivedAt) {
         completionDate = new Date(doc.archivedAt);
       }
-      // Se status é Concluído, usa data de atualização
+      // Só conta se status é "Concluído" E tem data de atualização válida
       else if (doc.status === 'Concluído' && doc.updatedAt) {
         completionDate = new Date(doc.updatedAt);
       }
       
+      // Se tem data de conclusão válida, verifica se foi neste mês
       if (completionDate) {
         return completionDate >= date && completionDate <= nextMonth;
       }
+      // Caso contrário, não conta (todos estão "Em Andamento")
       return false;
     }).length;
     
@@ -146,7 +151,7 @@ function generateRealMonthlyTrends(documents: any[]) {
     last6Months.push({
       month: `${monthNames[date.getMonth()]}/${date.getFullYear().toString().slice(-2)}`,
       created,
-      completed
+      completed // Será sempre 0 porque nenhum documento foi concluído
     });
   }
   
