@@ -220,6 +220,42 @@ export function ProductivityCharts({ data }: ProductivityChartsProps) {
         </Card>
       </div>
 
+      {/* Terceira linha - Produtividade por servidor */}
+      {data.userProductivity && data.userProductivity.length > 0 && (
+        <div className="flex justify-center">
+          <Card className="card-glass w-full max-w-4xl">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center justify-center gap-2">
+                <Users className="w-5 h-5" />
+                Produtividade por Servidor
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <Bar 
+                  data={{
+                    labels: data.userProductivity.map(user => user.userName),
+                    datasets: [{
+                      label: 'Total de Documentos',
+                      data: data.userProductivity.map(user => user.totalDocuments),
+                      backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                      borderColor: 'rgb(59, 130, 246)',
+                      borderWidth: 2
+                    }, {
+                      label: 'Documentos Concluídos',
+                      data: data.userProductivity.map(user => user.completedDocuments),
+                      backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                      borderColor: 'rgb(16, 185, 129)',
+                      borderWidth: 2
+                    }]
+                  }}
+                  options={barChartOptions}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
     </div>
   );
