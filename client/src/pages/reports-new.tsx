@@ -247,65 +247,7 @@ export default function ReportsPage() {
               <ProductivityCharts data={productivityData} />
             )}
 
-            {/* User Productivity */}
-            {productivityData?.userProductivity && (
-              <Card className="card-glass">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    Produtividade por Servidor
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {productivityData.userProductivity.map((user) => (
-                    <div key={user.userId} className="border border-white/10 rounded-lg p-4 bg-white/5">
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{user.userName}</h3>
-                          <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-300">
-                            <span>Total: {user.totalDocuments}</span>
-                            <span>Concluídos: {user.completedDocuments}</span>
-                            <span>Em Andamento: {user.inProgressDocuments}</span>
-                            <span>Vencidos: {user.overdueDocuments}</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col lg:items-end gap-2">
-                          <Badge 
-                            className={`${
-                              user.completionRate >= 80 
-                                ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                                : user.completionRate >= 60
-                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                                : 'bg-red-500/20 text-red-400 border-red-500/30'
-                            }`}
-                          >
-                            {user.completionRate.toFixed(1)}% de conclusão
-                          </Badge>
-                          <span className="text-xs text-gray-400">
-                            Tempo médio: {user.averageCompletionTime.toFixed(1)} dias
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
-                        <div className="text-center">
-                          <div className="text-blue-400 font-semibold">{user.documentsByType.certidoes}</div>
-                          <div className="text-gray-400">Certidões</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-yellow-400 font-semibold">{user.documentsByType.relatorios}</div>
-                          <div className="text-gray-400">Relatórios</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-green-400 font-semibold">{user.documentsByType.oficios}</div>
-                          <div className="text-gray-400">Ofícios</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+
           </div>
         </main>
       </div>
