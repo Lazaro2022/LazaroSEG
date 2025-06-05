@@ -45,6 +45,7 @@ const typeConfig = {
   "Certidão": { className: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   "Relatório": { className: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
   "Ofício": { className: "bg-green-500/20 text-green-400 border-green-500/30" },
+  "Extinção": { className: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
 };
 
 const editFormSchema = z.object({
@@ -65,7 +66,7 @@ export function DocumentsTable() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
-  
+
   const { data: documents, isLoading } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents?limit=10"],
   });
@@ -293,10 +294,11 @@ export function DocumentsTable() {
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="glass-morphism-dark border-white/10">
                         <SelectItem value="Certidão">Certidão</SelectItem>
                         <SelectItem value="Relatório">Relatório</SelectItem>
                         <SelectItem value="Ofício">Ofício</SelectItem>
+                        <SelectItem value="Extinção">Extinção</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

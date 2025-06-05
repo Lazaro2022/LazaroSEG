@@ -59,6 +59,8 @@ export function getDocumentTypeColor(type: string): string {
       return "text-orange-500";
     case "Ofício":
       return "text-green-500";
+    case "Extinção":
+      return "text-purple-500";
     default:
       return "text-gray-500";
   }

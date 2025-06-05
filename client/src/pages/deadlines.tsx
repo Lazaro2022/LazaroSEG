@@ -73,7 +73,7 @@ export default function DeadlinesPage() {
   const filteredDocuments = documents?.filter(doc => {
     const matchesType = filterType === "all" || doc.type === filterType;
     const matchesStatus = filterStatus === "all" || doc.status === filterStatus;
-    
+
     return matchesType && matchesStatus;
   }) || [];
 
@@ -118,7 +118,7 @@ export default function DeadlinesPage() {
   const handleSelectAll = (documentList: DocumentWithUser[]) => {
     const allIds = documentList.map(doc => doc.id);
     const allSelected = allIds.every(id => selectedDocuments.includes(id));
-    
+
     if (allSelected) {
       setSelectedDocuments(prev => prev.filter(id => !allIds.includes(id)));
     } else {
@@ -131,7 +131,7 @@ export default function DeadlinesPage() {
 
   const handleBulkStatusUpdate = (status: string) => {
     if (selectedDocuments.length === 0) return;
-    
+
     bulkUpdateMutation.mutate({
       ids: selectedDocuments,
       updates: { status, completedAt: status === "Concluído" ? new Date() : null }
@@ -140,7 +140,7 @@ export default function DeadlinesPage() {
 
   const handleMarkAsUrgent = () => {
     if (selectedDocuments.length === 0) return;
-    
+
     bulkUpdateMutation.mutate({
       ids: selectedDocuments,
       updates: { status: "Urgente" }
@@ -149,16 +149,16 @@ export default function DeadlinesPage() {
 
   const exportSelectedDocuments = async () => {
     if (selectedDocuments.length === 0) return;
-    
+
     const selectedDocs = documents?.filter(doc => selectedDocuments.includes(doc.id)) || [];
-    
+
     let csv = 'ID,Número do Processo,Nome do Interno,Tipo,Status,Prazo,Responsável,Dias até Vencimento\n';
     selectedDocs.forEach(doc => {
       const deadline = new Date(doc.deadline);
       const daysUntil = differenceInDays(deadline, now);
       csv += `${doc.id},"${doc.processNumber}","${doc.prisonerName}","${doc.type}","${doc.status}","${format(deadline, 'dd/MM/yyyy')}","${doc.assignedUser?.name || 'Não atribuído'}","${daysUntil}"\n`;
     });
-    
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -217,7 +217,7 @@ export default function DeadlinesPage() {
         </div>
         {getStatusBadge(document)}
       </div>
-      
+
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center text-gray-400">
           <Calendar className="w-4 h-4 mr-1" />
@@ -256,14 +256,14 @@ export default function DeadlinesPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
-      
+
       <main className="flex-1 ml-64 flex flex-col">
         <Header />
-        
+
         <div className="flex-1 p-6 overflow-y-auto space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Controle de Prazos</h1>
-            
+
             {selectedDocuments.length > 0 && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-400">
@@ -313,9 +313,10 @@ export default function DeadlinesPage() {
                     <SelectItem value="Certidão">Certidão</SelectItem>
                     <SelectItem value="Relatório">Relatório</SelectItem>
                     <SelectItem value="Ofício">Ofício</SelectItem>
+                    <SelectItem value="Extinção">Extinção</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-48 bg-gray-800/50 border-gray-600/30">
                     <SelectValue placeholder="Status" />
@@ -328,7 +329,7 @@ export default function DeadlinesPage() {
                     <SelectItem value="Vencido">Vencido</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -344,7 +345,7 @@ export default function DeadlinesPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="glass-morphism border-l-4 border-l-red-500">
@@ -358,7 +359,7 @@ export default function DeadlinesPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="glass-morphism border-l-4 border-l-orange-500">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -370,7 +371,7 @@ export default function DeadlinesPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="glass-morphism border-l-4 border-l-yellow-500">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -382,7 +383,7 @@ export default function DeadlinesPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="glass-morphism border-l-4 border-l-green-500">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">

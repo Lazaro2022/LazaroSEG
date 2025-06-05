@@ -144,6 +144,13 @@ export default function DocumentsPage() {
         description: "O documento foi marcado como concluído com sucesso.",
       });
     },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível concluir o documento.",
+        variant: "destructive",
+      });
+    },
   });
 
   const archiveMutation = useMutation({
@@ -312,7 +319,7 @@ export default function DocumentsPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header />
-        
+
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
           <AlertDialogContent className="card-glass">
@@ -340,7 +347,7 @@ export default function DocumentsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        
+
         <main className="flex-1 overflow-y-auto p-6">
           <div className="container mx-auto max-w-7xl space-y-6">
             {/* Header Section */}
@@ -349,7 +356,7 @@ export default function DocumentsPage() {
                 <h1 className="text-3xl font-bold text-white mb-2">Gerenciamento de Documentos</h1>
                 <p className="text-gray-400">Controle e acompanhamento de processos administrativos</p>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={() => setIsArchivedOpen(true)}
@@ -359,7 +366,7 @@ export default function DocumentsPage() {
                   <Archive className="w-4 h-4 mr-2" />
                   Nos Autos
                 </Button>
-                
+
                 <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -380,7 +387,7 @@ export default function DocumentsPage() {
                           className="bg-gray-800/50 border-gray-600/30"
                         />
                       </div>
-                      
+
                       <div>
                         <Label>Nome do Apenado</Label>
                         <Input
@@ -389,7 +396,7 @@ export default function DocumentsPage() {
                           className="bg-gray-800/50 border-gray-600/30"
                         />
                       </div>
-                      
+
                       <div>
                         <Label>Tipo de Documento</Label>
                         <Select 
@@ -399,14 +406,15 @@ export default function DocumentsPage() {
                           <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="glass-morphism-dark border-white/10">
                             <SelectItem value="Certidão">Certidão</SelectItem>
                             <SelectItem value="Relatório">Relatório</SelectItem>
                             <SelectItem value="Ofício">Ofício</SelectItem>
+                            <SelectItem value="Extinção">Extinção</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>Responsável</Label>
                         <Select 
@@ -425,7 +433,7 @@ export default function DocumentsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>Prazo Final</Label>
                         <Popover>
@@ -451,7 +459,7 @@ export default function DocumentsPage() {
                           </PopoverContent>
                         </Popover>
                       </div>
-                      
+
                       <div className="flex space-x-2 pt-4">
                         <Button
                           type="button"
@@ -499,7 +507,7 @@ export default function DocumentsPage() {
                   Todos os Documentos ({filteredDocuments?.length || 0})
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -520,14 +528,14 @@ export default function DocumentsPage() {
                         const deadline = new Date(document.deadline);
                         const isOverdue = deadline < now && document.status !== "Concluído";
                         const isUrgent = deadline <= new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000)) && document.status !== "Concluído" && !isOverdue;
-                        
+
                         let displayStatus = document.status;
                         if (isOverdue) {
                           displayStatus = "Vencido";
                         } else if (isUrgent && document.status === "Em Andamento") {
                           displayStatus = "Urgente";
                         }
-                        
+
                         return (
                           <tr 
                             key={document.id} 
@@ -615,7 +623,7 @@ export default function DocumentsPage() {
                       })}
                     </tbody>
                   </table>
-                  
+
                   {filteredDocuments.length === 0 && (
                     <div className="text-center py-8 text-gray-400">
                       {searchTerm ? "Nenhum documento encontrado com os critérios de busca." : "Nenhum documento encontrado."}
@@ -640,7 +648,7 @@ export default function DocumentsPage() {
                       className="bg-gray-800/50 border-gray-600/30"
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Nome do Apenado</Label>
                     <Input
@@ -649,7 +657,7 @@ export default function DocumentsPage() {
                       className="bg-gray-800/50 border-gray-600/30"
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Tipo de Documento</Label>
                     <Select 
@@ -659,14 +667,15 @@ export default function DocumentsPage() {
                       <SelectTrigger className="bg-gray-800/50 border-gray-600/30">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="glass-morphism-dark border-white/10">
                         <SelectItem value="Certidão">Certidão</SelectItem>
                         <SelectItem value="Relatório">Relatório</SelectItem>
                         <SelectItem value="Ofício">Ofício</SelectItem>
+                        <SelectItem value="Extinção">Extinção</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label>Status</Label>
                     <Select 
@@ -682,7 +691,7 @@ export default function DocumentsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label>Responsável</Label>
                     <Select 
@@ -701,7 +710,7 @@ export default function DocumentsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label>Prazo Final</Label>
                     <Popover>
@@ -727,7 +736,7 @@ export default function DocumentsPage() {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  
+
                   <div className="flex space-x-2 pt-4">
                     <Button
                       type="button"
@@ -800,6 +809,7 @@ export default function DocumentsPage() {
                               <div className="flex items-center space-x-4 text-xs text-gray-400 mt-1">
                                 <span>Arquivado em: {format(new Date(doc.archivedAt || doc.completedAt || doc.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                                 {doc.assignedUser && (
+                               
                                   <span>Responsável: {doc.assignedUser.name}</span>
                                 )}
                               </div>
