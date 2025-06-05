@@ -354,7 +354,7 @@ export default function DocumentsPage() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">Gerenciamento de Documentos</h1>
-                <p className="text-gray-400">Controle e acompanhamento de processos administrativos</p>
+                <p className="text-gray-400">Controle e acompanhamento de documentos judiciais 3º execução</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
