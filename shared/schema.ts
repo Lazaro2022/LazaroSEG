@@ -111,8 +111,9 @@ export type DashboardStats = {
   overdue: number;
 };
 
-export type DocumentTypeStats = {
+export interface DocumentTypeStats {
   certidoes: number;
   relatorios: number;
   oficios: number;
-};
+  extincoes: number;
+}

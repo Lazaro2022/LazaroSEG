@@ -442,6 +442,97 @@ export class DatabaseStorage implements IStorage {
       count: count(documents.id),
     }).from(documents).where(eq(documents.type, "Ofício"));
 
+    const [extincoesStats] = await db.select({
+      count: count(documents.id),
+    }).from(documents).where(eq(documents.type, "Extinção"));
+
+    return {
+      certidoes: certidoesStats?.count || 0,
+      relatorios: relatoriosStats?.count || 0,
+      oficios: oficiosStats?.count || 0,
+      extincoes: extincoesStats?.count || 0,
+    };
+  }
+
+  async getArchivedDocuments(): Promise<DocumentWithUser[]> {
+    const result = await db.select({
+      id: documents.id,
+      processNumber: documents.processNumber,
+      party: documents.party,
+      type: documents.type,
+      status: documents.status,
+      assignedUserId: documents.assignedUserId,
+      deadline: documents.deadline,
+      createdAt: documents.createdAt,
+      completedAt: documents.completedAt,
+      description: documents.description,
+      assignedUserName: users.username,
+    })
+    .from(archivedDocuments)
+    .leftJoin(users, eq(archivedDocuments.assignedUserId, users.id))
+    .orderBy(desc(archivedDocuments.createdAt));
+
+    return result.map(row => ({
+      id: row.id,
+      processNumber: row.processNumber,
+      party: row.party,
+      type: row.type,
+      status: row.status,
+      assignedUserId: row.assignedUserId,
+      deadline: row.deadline,
+      createdAt: row.createdAt,
+      completedAt: row.completedAt,
+      description: row.description,
+      assignedUserName: row.assignedUserName,
+    }));
+  }
+
+  async archiveDocument(id: number): Promise<DocumentWithUser | null> {
+    const [doc] = await db.select().from(documents).where(eq(documents.id, id));
+    
+    if (!doc) {
+      return null;
+    }
+
+    // Inserir no arquivo
+    await db.insert(archivedDocuments).values({
+      id: doc.id,
+      processNumber: doc.processNumber,
+      party: doc.party,
+      type: doc.type,
+      status: 'Concluído',
+      assignedUserId: doc.assignedUserId,
+      deadline: doc.deadline,
+      createdAt: doc.createdAt,
+      completedAt: new Date(),
+      description: doc.description,
+    });
+
+    // Remover da tabela principal
+    await db.delete(documents).where(eq(documents.id, id));
+
+    // Buscar informações do usuário para retornar
+    const [user] = await db.select().from(users).where(eq(users.id, doc.assignedUserId));
+    
+    return {
+      ...doc,
+      status: 'Concluído',
+      completedAt: new Date(),
+      assignedUserName: user?.username || 'Usuário não encontrado',
+    };
+  }
+
+  async getArchivedStats(): Promise<DashboardStats> {
+    const archivedDocs = await this.getArchivedDocuments();
+    
+    return {
+      totalDocuments: archivedDocs.length,
+      inProgress: 0,
+      completed: archivedDocs.length,
+      overdue: 0,
+    };
+  }pe, "Ofício"));
+
     return {
       certidoes: certidoesStats.count,
       relatorios: relatoriosStats.count,
