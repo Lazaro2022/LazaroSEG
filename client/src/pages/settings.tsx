@@ -563,6 +563,8 @@ export default function SettingsPage() {
                                         <SelectItem value="Psicóloga">Psicóloga</SelectItem>
                                         <SelectItem value="Advogado">Advogado</SelectItem>
                                         <SelectItem value="Secretário">Secretário</SelectItem>
+                                        <SelectItem value="Colaborador">Colaborador</SelectItem>
+                                        <SelectItem value="Estagiário">Estagiário</SelectItem>
                                       </SelectContent>
                                     </Select>
                                     <FormMessage />
