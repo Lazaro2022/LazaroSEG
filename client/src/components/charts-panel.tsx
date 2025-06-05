@@ -52,7 +52,7 @@ export function ChartsPanel() {
   const statusData = documents ? (() => {
     const now = new Date();
     const urgentThreshold = new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000));
-    
+
     let concluido = 0;
     let emAndamento = 0;
     let urgente = 0;
@@ -60,7 +60,7 @@ export function ChartsPanel() {
 
     documents.forEach(doc => {
       const deadline = new Date(doc.deadline);
-      
+
       if (doc.status === "Concluído") {
         concluido++;
       } else if (deadline < now) {
@@ -99,7 +99,7 @@ export function ChartsPanel() {
       const dayIndex = weekDays.findIndex(day => 
         format(day.date, 'yyyy-MM-dd') === format(createdDate, 'yyyy-MM-dd')
       );
-      
+
       if (dayIndex !== -1) {
         weekDays[dayIndex].created++;
         if (doc.status === "Concluído") {
@@ -130,7 +130,7 @@ export function ChartsPanel() {
         const dayIndex = next7Days.findIndex(day => 
           format(day.date, 'yyyy-MM-dd') === format(deadline, 'yyyy-MM-dd')
         );
-        
+
         if (dayIndex !== -1) {
           next7Days[dayIndex].deadlines++;
           if (dayIndex <= 1) { // próximos 2 dias são urgentes
@@ -197,7 +197,7 @@ export function ChartsPanel() {
                 />
               </PieChart>
             </ResponsiveContainer>
-            
+
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-xl font-bold text-white">{total}</div>
@@ -205,7 +205,7 @@ export function ChartsPanel() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 space-y-2">
             {chartData.map((item) => {
               const percentage = total > 0 ? Math.round((item.value / total) * 100) : 0;
@@ -258,7 +258,7 @@ export function ChartsPanel() {
                 />
               </PieChart>
             </ResponsiveContainer>
-            
+
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-xl font-bold text-white">{totalStatus}</div>
@@ -266,7 +266,7 @@ export function ChartsPanel() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 space-y-2">
             {statusData.map((item) => {
               const percentage = totalStatus > 0 ? Math.round((item.value / totalStatus) * 100) : 0;

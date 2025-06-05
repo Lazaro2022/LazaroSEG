@@ -201,7 +201,7 @@ export default function SettingsPage() {
     mutationFn: async () => {
       const response = await fetch("/api/reports/export?format=json&period=all");
       if (!response.ok) throw new Error("Failed to export data");
-      
+
       const data = await response.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
@@ -282,7 +282,7 @@ export default function SettingsPage() {
       ...data,
       password: data.password || "123456" // Default password if not provided
     };
-    
+
     if (editingUser) {
       updateUserMutation.mutate({ id: editingUser.id, data: submitData });
     } else {
@@ -298,14 +298,19 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    
       <Sidebar />
-      <main className="flex-1 ml-64 flex flex-col">
+      <div className="flex-1 flex flex-col md:ml-64">
         <Header />
-        
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <h1 className="text-3xl font-bold">Configurações do Sistema</h1>
-          
+
+        <main className="flex-1 overflow-y-auto p-3 md:p-6">
+          <div className="container mx-auto max-w-4xl space-y-4 md:space-y-6">
+            {/* Header */}
+            <div>
+              <h1 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">Configurações do Sistema</h1>
+              <p className="text-gray-400 text-sm md:text-base">Gerencie as configurações gerais e usuários</p>
+            </div>
+
           <Tabs defaultValue="general" className="space-y-6">
             <TabsList className="glass-morphism p-1">
               <TabsTrigger value="general" className="flex items-center space-x-2">
@@ -346,7 +351,7 @@ export default function SettingsPage() {
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="institution">Instituição</Label>
                       <Input
@@ -356,7 +361,7 @@ export default function SettingsPage() {
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="timezone">Fuso Horário</Label>
                       <Select 
@@ -371,7 +376,7 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="language">Idioma</Label>
                       <Select 
@@ -409,7 +414,7 @@ export default function SettingsPage() {
                         Documentos com prazo menor que este valor serão marcados como urgentes
                       </p>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="warningDays">Aviso de Vencimento (dias)</Label>
                       <Input
@@ -423,7 +428,7 @@ export default function SettingsPage() {
                         Enviar avisos quando faltarem estes dias para o vencimento
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="autoArchive">Arquivamento Automático</Label>
@@ -437,7 +442,7 @@ export default function SettingsPage() {
                         onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, auto_archive: checked }))}
                       />
                     </div>
-                    
+
                     <div className="pt-4">
                       <Button 
                         onClick={() => saveSettingsMutation.mutate(systemSettings)}
@@ -499,7 +504,7 @@ export default function SettingsPage() {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <FormField
                                 control={form.control}
                                 name="username"
@@ -517,7 +522,7 @@ export default function SettingsPage() {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <FormField
                                 control={form.control}
                                 name="password"
@@ -543,7 +548,7 @@ export default function SettingsPage() {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <FormField
                                 control={form.control}
                                 name="role"
@@ -570,7 +575,7 @@ export default function SettingsPage() {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <FormField
                                 control={form.control}
                                 name="initials"
@@ -589,7 +594,7 @@ export default function SettingsPage() {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <div className="flex justify-end space-x-2 pt-4">
                                 <Button 
                                   type="button" 
@@ -611,7 +616,7 @@ export default function SettingsPage() {
                         </DialogContent>
                       </Dialog>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -674,7 +679,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Alertas por Email</h3>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Documentos Vencidos</Label>
@@ -682,7 +687,7 @@ export default function SettingsPage() {
                       </div>
                       <Switch defaultChecked />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Prazos Urgentes</Label>
@@ -690,7 +695,7 @@ export default function SettingsPage() {
                       </div>
                       <Switch defaultChecked />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Relatórios Semanais</Label>
@@ -699,12 +704,12 @@ export default function SettingsPage() {
                       <Switch />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Configurações de Email</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="smtpServer">Servidor SMTP</Label>
@@ -714,7 +719,7 @@ export default function SettingsPage() {
                           className="bg-gray-800/50 border-gray-600/30"
                         />
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="smtpPort">Porta SMTP</Label>
                         <Input
@@ -724,7 +729,7 @@ export default function SettingsPage() {
                           className="bg-gray-800/50 border-gray-600/30"
                         />
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="emailUser">Usuário</Label>
                         <Input
@@ -733,7 +738,7 @@ export default function SettingsPage() {
                           className="bg-gray-800/50 border-gray-600/30"
                         />
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="emailPassword">Senha</Label>
                         <Input
@@ -756,7 +761,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Políticas de Senha</h3>
-                    
+
                     <div>
                       <Label htmlFor="minPasswordLength">Comprimento Mínimo da Senha</Label>
                       <Input
@@ -766,7 +771,7 @@ export default function SettingsPage() {
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Exigir Caracteres Especiais</Label>
@@ -774,7 +779,7 @@ export default function SettingsPage() {
                       </div>
                       <Switch defaultChecked />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Exigir Números</Label>
@@ -783,12 +788,12 @@ export default function SettingsPage() {
                       <Switch defaultChecked />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Sessão e Acesso</h3>
-                    
+
                     <div>
                       <Label htmlFor="sessionTimeout">Timeout de Sessão (minutos)</Label>
                       <Input
@@ -798,7 +803,7 @@ export default function SettingsPage() {
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Autenticação de Dois Fatores</Label>
@@ -806,7 +811,7 @@ export default function SettingsPage() {
                       </div>
                       <Switch />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Log de Auditoria</Label>
@@ -827,7 +832,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Backup e Manutenção</h3>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Backup Automático</Label>
@@ -835,7 +840,7 @@ export default function SettingsPage() {
                       </div>
                       <Switch defaultChecked />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="backupRetention">Retenção de Backup (dias)</Label>
                       <Input
@@ -845,7 +850,7 @@ export default function SettingsPage() {
                         className="bg-gray-800/50 border-gray-600/30"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="logRetention">Retenção de Logs (dias)</Label>
                       <Input
@@ -856,40 +861,41 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Informações do Sistema</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
                         <Label className="text-gray-400">Versão do Sistema</Label>
                         <p className="text-white">v1.0.0</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-gray-400">Última Atualização</Label>
                         <p className="text-white">02/06/2025</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-gray-400">Banco de Dados</Label>
                         <p className="text-white">EM PostgreSQL Neon</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-gray-400">Status do Sistema</Label>
                         <p className="text-green-400">Operacional</p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
-                  <div className="space-y-4">
+
+                  <div className````text
+ space-y-4">
                     <h3 className="text-lg font-medium">Ações do Sistema</h3>
-                    
+
                     <div className="flex space-x-4">
                       <Button 
                         variant="outline" 
@@ -916,7 +922,7 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
           </Tabs>
-          
+
           <div className="flex justify-end">
             <Button 
               onClick={handleSaveSettings}
@@ -925,8 +931,8 @@ export default function SettingsPage() {
               Salvar Configurações
             </Button>
           </div>
-        </div>
-      </main>
-    </div>
+        
+      
+    
   );
 }
