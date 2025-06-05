@@ -351,10 +351,10 @@ export default function DocumentsPage() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="container mx-auto max-w-7xl space-y-6">
             {/* Header Section */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 md:gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Gerenciamento de Documentos</h1>
-                <p className="text-gray-400 text-sm md:text-base">Controle e acompanhamento de documentos judiciais</p>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">Gerenciamento de Documentos</h1>
+                <p className="text-gray-400 text-xs md:text-base">Controle e acompanhamento de documentos judiciais</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -490,15 +490,15 @@ export default function DocumentsPage() {
 
             {/* Search and Filter */}
             <Card className="glass-morphism">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-4">
+              <CardContent className="p-3 md:p-4">
+                <div className="flex items-center space-x-2 md:space-x-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 md:w-4 md:h-4" />
                     <Input
-                      placeholder="Buscar por processo, apenado ou tipo..."
+                      placeholder="Buscar..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-gray-800/50 border-gray-600/30"
+                      className="pl-8 md:pl-10 bg-gray-800/50 border-gray-600/30 text-sm h-8 md:h-auto"
                     />
                   </div>
                 </div>
@@ -507,24 +507,24 @@ export default function DocumentsPage() {
 
             {/* Documents Table */}
             <Card className="glass-morphism">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-semibold">
+              <CardHeader className="pb-3 md:pb-4 card-mobile">
+                <CardTitle className="text-lg md:text-xl font-semibold">
                   Todos os Documentos ({filteredDocuments?.length || 0})
                 </CardTitle>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="card-mobile">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[800px]">
+                  <table className="w-full text-xs md:text-sm min-w-[700px] md:min-w-[800px] table-mobile">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Nº Processo</th>
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Apenado</th>
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Tipo</th>
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300 hidden lg:table-cell">Responsável</th>
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Prazo</th>
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Status</th>
-                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Ações</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 table-mobile">Nº Processo</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 table-mobile">Apenado</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 table-mobile">Tipo</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 hidden lg:table-cell table-mobile">Responsável</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 table-mobile">Prazo</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 table-mobile">Status</th>
+                        <th className="text-left py-2 md:py-3 px-1 md:px-4 font-medium text-gray-300 table-mobile">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -546,49 +546,49 @@ export default function DocumentsPage() {
                             key={document.id} 
                             className="border-b border-white/5 hover:bg-white/5 transition-colors"
                           >
-                            <td className="py-4 px-2 md:px-4">
-                              <span className="font-mono text-blue-400 text-xs md:text-sm">
+                            <td className="py-2 md:py-4 px-1 md:px-4 table-mobile">
+                              <span className="font-mono text-blue-400 text-xs">
                                 {document.processNumber}
                               </span>
                             </td>
-                            <td className="py-4 px-2 md:px-4 text-white">
-                              <div className="max-w-[120px] md:max-w-none truncate">
+                            <td className="py-2 md:py-4 px-1 md:px-4 text-white table-mobile">
+                              <div className="max-w-[80px] md:max-w-[120px] lg:max-w-none truncate">
                                 {document.prisonerName}
                               </div>
                             </td>
-                            <td className="py-4 px-2 md:px-4">
+                            <td className="py-2 md:py-4 px-1 md:px-4 table-mobile">
                               <Badge 
                                 variant="outline" 
-                                className={`${typeConfig[document.type as keyof typeof typeConfig]?.className} border text-xs`}
+                                className={`${typeConfig[document.type as keyof typeof typeConfig]?.className} border badge-mobile`}
                               >
                                 {document.type}
                               </Badge>
                             </td>
-                            <td className="py-4 px-2 md:px-4 text-gray-300 hidden lg:table-cell">
+                            <td className="py-2 md:py-4 px-1 md:px-4 text-gray-300 hidden lg:table-cell table-mobile">
                               <div className="max-w-[100px] truncate">
                                 {document.assignedUser?.name || "Não atribuído"}
                               </div>
                             </td>
-                            <td className="py-4 px-2 md:px-4 text-gray-300">
-                              <span className="text-xs md:text-sm">
+                            <td className="py-2 md:py-4 px-1 md:px-4 text-gray-300 table-mobile">
+                              <span className="text-xs">
                                 {format(new Date(document.deadline), "dd/MM", { locale: ptBR })}
                               </span>
                             </td>
-                            <td className="py-4 px-2 md:px-4">
+                            <td className="py-2 md:py-4 px-1 md:px-4 table-mobile">
                               <Badge 
                                 variant="outline" 
-                                className={`${statusConfig[displayStatus as keyof typeof statusConfig]?.className} border text-xs`}
+                                className={`${statusConfig[displayStatus as keyof typeof statusConfig]?.className} border badge-mobile`}
                               >
                                 {displayStatus}
                               </Badge>
                             </td>
-                            <td className="py-4 px-2 md:px-4">
-                              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                            <td className="py-2 md:py-4 px-1 md:px-4 table-mobile">
+                              <div className="flex flex-col md:flex-row items-start md:items-center gap-1">
                                 {document.status === "Em Andamento" && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="pill-button bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
+                                    className="pill-button bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 btn-mobile w-full md:w-auto"
                                     onClick={() => completeMutation.mutate(document.id)}
                                     disabled={completeMutation.isPending}
                                   >
@@ -599,7 +599,7 @@ export default function DocumentsPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="pill-button bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
+                                  className="pill-button bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30 btn-mobile w-full md:w-auto"
                                   onClick={() => handleEdit(document)}
                                 >
                                   <Edit className="w-3 h-3 md:mr-1" />
@@ -609,7 +609,7 @@ export default function DocumentsPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="pill-button bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
+                                    className="pill-button bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 btn-mobile w-full md:w-auto"
                                     onClick={() => handleArchiveDocument(document.id)}
                                     disabled={archiveMutation.isPending}
                                   >
@@ -620,7 +620,7 @@ export default function DocumentsPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="pill-button bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
+                                  className="pill-button bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 btn-mobile w-full md:w-auto"
                                   onClick={() => handleDelete(document.id)}
                                   disabled={deleteMutation.isPending}
                                 >

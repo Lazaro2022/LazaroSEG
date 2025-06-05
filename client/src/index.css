@@ -12,13 +12,47 @@
   
   /* Ensure proper touch targets */
   button {
-    min-height: 44px;
+    min-height: 40px;
   }
   
-  /* Improve text readability on mobile */
+  /* Optimize typography for mobile */
   .text-xs {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    line-height: 0.9rem;
+  }
+  
+  .text-sm {
+    font-size: 0.8rem;
     line-height: 1rem;
+  }
+  
+  /* Reduce card padding on mobile */
+  .card-mobile {
+    padding: 0.75rem;
+  }
+  
+  /* Compact table styling */
+  .table-mobile td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .table-mobile th {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.7rem;
+  }
+  
+  /* Compact badges */
+  .badge-mobile {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
+  }
+  
+  /* Smaller buttons on mobile */
+  .btn-mobile {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    min-height: 32px;
   }
 }
 
