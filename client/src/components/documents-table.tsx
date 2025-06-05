@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Plus, CheckCircle, Edit, Archive, Save, X, Trash2, RotateCcw } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -62,6 +63,8 @@ export function DocumentsTable() {
   const queryClient = useQueryClient();
   const [editingDocument, setEditingDocument] = useState<DocumentWithUser | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
   
   const { data: documents, isLoading } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents?limit=10"],
@@ -207,8 +210,15 @@ export function DocumentsTable() {
   };
 
   const handleDelete = (documentId: number) => {
-    if (confirm("Tem certeza que deseja excluir este documento permanentemente?")) {
-      deleteMutation.mutate(documentId);
+    setDocumentToDelete(documentId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (documentToDelete) {
+      deleteMutation.mutate(documentToDelete);
+      setDeleteConfirmOpen(false);
+      setDocumentToDelete(null);
     }
   };
 
@@ -381,6 +391,34 @@ export function DocumentsTable() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="card-glass">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-300">
+              Tem certeza que deseja excluir este documento permanentemente? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setDeleteConfirmOpen(false)}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Active Documents */}
       <Card className="card-glass">
