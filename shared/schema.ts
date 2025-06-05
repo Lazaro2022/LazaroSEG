@@ -33,6 +33,19 @@ export const servers = pgTable("servers", {
   completionPercentage: integer("completion_percentage").default(0).notNull(),
 });
 
+export const systemSettings = pgTable("system_settings", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  systemName: text("system_name").notNull().default("Lazarus CG - Sistema de Controle"),
+  institution: text("institution").notNull().default("Unidade Prisional - Manaus/AM"),
+  adminName: text("admin_name").notNull().default("Lazarus"),
+  timezone: text("timezone").notNull().default("america/manaus"),
+  language: text("language").notNull().default("pt-br"),
+  urgentDays: integer("urgent_days").notNull().default(2),
+  warningDays: integer("warning_days").notNull().default(7),
+  autoArchive: boolean("auto_archive").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -63,12 +76,25 @@ export const insertServerSchema = createInsertSchema(servers).pick({
   completionPercentage: true,
 });
 
+export const insertSystemSettingsSchema = createInsertSchema(systemSettings).pick({
+  systemName: true,
+  institution: true,
+  adminName: true,
+  timezone: true,
+  language: true,
+  urgentDays: true,
+  warningDays: true,
+  autoArchive: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documents.$inferSelect;
 export type InsertServer = z.infer<typeof insertServerSchema>;
 export type Server = typeof servers.$inferSelect;
+export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
+export type SystemSettings = typeof systemSettings.$inferSelect;
 
 export type DocumentWithUser = Document & {
   assignedUser?: User;

@@ -277,7 +277,7 @@ export function Header() {
             </div>
             <Avatar className="w-10 h-10 border-2 border-[hsl(var(--neon-turquoise))]">
               <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                {(systemSettings?.admin_name || "Lazarus").split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                LC
               </AvatarFallback>
             </Avatar>
           </div>
