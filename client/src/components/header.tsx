@@ -276,9 +276,7 @@ export function Header() {
               <div className="text-xs text-gray-400">Administrador</div>
             </div>
             <Avatar className="w-10 h-10 border-2 border-[hsl(var(--neon-turquoise))]">
-              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                LC
-              </AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">L</AvatarFallback>
             </Avatar>
           </div>
         </div>
