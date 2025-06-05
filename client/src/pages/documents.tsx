@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, CheckCircle, Edit, Archive, CalendarIcon, Search, RotateCcw } from "lucide-react";
+import { Plus, CheckCircle, Edit, Archive, CalendarIcon, Search, RotateCcw, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +61,8 @@ export default function DocumentsPage() {
   const [isNewDocumentOpen, setIsNewDocumentOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentWithUser | null>(null);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
 
   const { data: documents, isLoading } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents"],
@@ -187,12 +190,47 @@ export default function DocumentsPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/documents/${id}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Documento excluído",
+        description: "O documento foi excluído permanentemente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents/archived"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      setDeleteConfirmOpen(false);
+      setDocumentToDelete(null);
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao excluir o documento.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRestoreDocument = (id: number) => {
     restoreMutation.mutate(id);
   };
 
   const handleArchiveDocument = (id: number) => {
     archiveMutation.mutate(id);
+  };
+
+  const handleDelete = (documentId: number) => {
+    setDocumentToDelete(documentId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (documentToDelete) {
+      deleteMutation.mutate(documentToDelete);
+    }
   };
 
   const onSubmit = (data: DocumentFormData) => {
@@ -531,6 +569,16 @@ export default function DocumentsPage() {
                                     Arquivar
                                   </Button>
                                 )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="pill-button bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 text-xs px-3 py-1"
+                                  onClick={() => handleDelete(document.id)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Excluir
+                                </Button>
                               </div>
                             </td>
                           </tr>
