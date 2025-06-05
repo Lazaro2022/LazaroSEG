@@ -26,7 +26,6 @@ const COLORS = {
   certidoes: '#3b82f6', // blue
   relatorios: '#10b981', // green  
   oficios: '#f59e0b', // orange
-  extincoes: '#8b5cf6', // purple
   concluido: '#10b981', // green
   emAndamento: '#3b82f6', // blue
   urgente: '#ef4444', // red
@@ -47,7 +46,6 @@ export function ChartsPanel() {
     { name: 'Certidões', value: typeStats.certidoes, color: COLORS.certidoes },
     { name: 'Relatórios', value: typeStats.relatorios, color: COLORS.relatorios },
     { name: 'Ofícios', value: typeStats.oficios, color: COLORS.oficios },
-    { name: 'Extinções', value: typeStats.extincoes || 0, color: '#8b5cf6' }, // purple
   ] : [];
 
   // Dados de status dos documentos
