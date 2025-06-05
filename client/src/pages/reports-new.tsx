@@ -24,6 +24,7 @@ interface ProductivityData {
     certidoes: number;
     relatorios: number;
     oficios: number;
+    extincoes: number;
   };
   dailyProduction: Array<{
     date: string;
@@ -48,6 +49,7 @@ interface ProductivityData {
       certidoes: number;
       relatorios: number;
       oficios: number;
+      extincoes: number;
     };
     monthlyProduction: Array<{
       month: string;

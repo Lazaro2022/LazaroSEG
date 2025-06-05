@@ -15,6 +15,7 @@ export interface ProductivityReport {
     certidoes: number;
     relatorios: number;
     oficios: number;
+    extincoes: number;
   };
   monthlyProduction: Array<{
     month: string;
@@ -34,6 +35,7 @@ export interface SystemReport {
     certidoes: number;
     relatorios: number;
     oficios: number;
+    extincoes: number;
   };
   dailyProduction: Array<{
     date: string;
@@ -52,11 +54,11 @@ export async function generateProductivityReport(): Promise<SystemReport> {
   const activeDocuments = await storage.getAllDocuments();
   const archivedDocuments = await storage.getArchivedDocuments();
   const users = await storage.getAllUsers();
-  
+
   const now = new Date();
   const thirtyDaysAgo = subDays(now, 30);
   const sixMonthsAgo = subMonths(now, 6);
-  
+
   // System-wide statistics
   const totalDocuments = activeDocuments.length + archivedDocuments.length;
   const completedDocuments = activeDocuments.filter(doc => doc.status === 'Concluído').length + archivedDocuments.length;
@@ -65,9 +67,9 @@ export async function generateProductivityReport(): Promise<SystemReport> {
     const deadline = new Date(doc.deadline);
     return deadline < now && doc.status !== 'Concluído';
   }).length;
-  
+
   const completionRate = totalDocuments > 0 ? (completedDocuments / totalDocuments) * 100 : 0;
-  
+
   // Average completion time - use both active completed docs and archived docs
   const allCompletedDocs = [...activeDocuments.filter(doc => doc.status === 'Concluído'), ...archivedDocuments];
   const completedDocsWithTime = allCompletedDocs.filter(doc => 
@@ -80,15 +82,16 @@ export async function generateProductivityReport(): Promise<SystemReport> {
         return acc + (completed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
       }, 0) / completedDocsWithTime.length
     : 0;
-  
+
   // Documents by type - count all documents (active + archived)
   const allDocuments = [...activeDocuments, ...archivedDocuments];
   const documentsByType = {
     certidoes: allDocuments.filter(doc => doc.type === 'Certidão').length,
     relatorios: allDocuments.filter(doc => doc.type === 'Relatório').length,
     oficios: allDocuments.filter(doc => doc.type === 'Ofício').length,
+    extincoes: allDocuments.filter(doc => doc.type === 'Extinção').length,
   };
-  
+
   // Daily production for last 30 days
   const dailyProduction = eachDayOfInterval({ start: thirtyDaysAgo, end: now }).map(date => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -98,14 +101,14 @@ export async function generateProductivityReport(): Promise<SystemReport> {
     const completed = allDocuments.filter(doc => 
       doc.completedAt && format(new Date(doc.completedAt), 'yyyy-MM-dd') === dateStr
     ).length;
-    
+
     return {
       date: format(date, 'dd/MM', { locale: ptBR }),
       created,
       completed
     };
   });
-  
+
   // Monthly trends for last 6 months
   const monthlyTrends = eachMonthOfInterval({ start: sixMonthsAgo, end: now }).map(monthStart => {
     const monthEnd = endOfMonth(monthStart);
@@ -118,14 +121,14 @@ export async function generateProductivityReport(): Promise<SystemReport> {
       const completed = new Date(doc.completedAt);
       return completed >= monthStart && completed <= monthEnd;
     });
-    
+
     return {
       month: format(monthStart, 'MMM/yy', { locale: ptBR }),
       created: monthDocs.length,
       completed: monthCompleted.length
     };
   });
-  
+
   // User productivity
   const userProductivity: ProductivityReport[] = users.map(user => {
     const userDocs = allDocuments.filter(doc => doc.assignedTo === user.id);
@@ -140,9 +143,9 @@ export async function generateProductivityReport(): Promise<SystemReport> {
       const deadline = new Date(doc.deadline);
       return deadline < now && doc.status !== 'Concluído';
     });
-    
+
     const userCompletionRate = userDocs.length > 0 ? (userCompleted.length / userDocs.length) * 100 : 0;
-    
+
     const userCompletedWithTime = userCompleted.filter(doc => 
       doc.completedAt && doc.createdAt
     );
@@ -153,13 +156,14 @@ export async function generateProductivityReport(): Promise<SystemReport> {
           return acc + (completed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
         }, 0) / userCompletedWithTime.length
       : 0;
-    
+
     const userDocsByType = {
       certidoes: userDocs.filter(doc => doc.type === 'Certidão').length,
       relatorios: userDocs.filter(doc => doc.type === 'Relatório').length,
       oficios: userDocs.filter(doc => doc.type === 'Ofício').length,
+      extincoes: userDocs.filter(doc => doc.type === 'Extinção').length,
     };
-    
+
     const monthlyProduction = eachMonthOfInterval({ start: sixMonthsAgo, end: now }).map(monthStart => {
       const monthEnd = endOfMonth(monthStart);
       const monthUserDocs = userDocs.filter(doc => {
@@ -171,14 +175,14 @@ export async function generateProductivityReport(): Promise<SystemReport> {
         const completed = new Date(doc.completedAt);
         return completed >= monthStart && completed <= monthEnd;
       });
-      
+
       return {
         month: format(monthStart, 'MMM/yy', { locale: ptBR }),
         completed: monthUserCompleted.length,
         total: monthUserDocs.length
       };
     });
-    
+
     return {
       userId: user.id,
       userName: user.name,
@@ -192,7 +196,7 @@ export async function generateProductivityReport(): Promise<SystemReport> {
       monthlyProduction
     };
   });
-  
+
   return {
     totalDocuments,
     completedDocuments,
@@ -209,7 +213,7 @@ export async function generateProductivityReport(): Promise<SystemReport> {
 
 export async function generatePDFReport(): Promise<Buffer> {
   const reportData = await generateProductivityReport();
-  
+
   // For now, return a simple buffer - PDF generation would be implemented here
   const jsonData = JSON.stringify(reportData, null, 2);
   return Buffer.from(jsonData, 'utf8');

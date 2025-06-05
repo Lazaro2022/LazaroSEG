@@ -40,6 +40,7 @@ interface ProductivityData {
     certidoes: number;
     relatorios: number;
     oficios: number;
+    extincoes: number;
   };
   dailyProduction: Array<{
     date: string;
@@ -64,6 +65,7 @@ interface ProductivityData {
       certidoes: number;
       relatorios: number;
       oficios: number;
+      extincoes: number;
     };
   }>;
 }
@@ -75,22 +77,25 @@ interface ProductivityChartsProps {
 export function ProductivityCharts({ data }: ProductivityChartsProps) {
   // Gráfico de distribuição por tipo (pizza) - dados reais do banco
   const typeDistributionData = {
-    labels: ['Certidões', 'Relatórios', 'Ofícios'],
+    labels: ['Certidões', 'Relatórios', 'Ofícios', 'Extinções'],
     datasets: [{
       data: [
         data.documentsByType.certidoes,
         data.documentsByType.relatorios,
-        data.documentsByType.oficios
+        data.documentsByType.oficios,
+        data.documentsByType.extincoes
       ],
       backgroundColor: [
         'rgba(59, 130, 246, 0.8)',   // Azul - Certidões
         'rgba(245, 158, 11, 0.8)',   // Laranja - Relatórios
-        'rgba(16, 185, 129, 0.8)'    // Verde - Ofícios
+        'rgba(16, 185, 129, 0.8)',   // Verde - Ofícios
+        'rgba(168, 85, 247, 0.8)'    // Roxo - Extinções
       ],
       borderColor: [
         'rgb(59, 130, 246)',
         'rgb(245, 158, 11)',
-        'rgb(16, 185, 129)'
+        'rgb(16, 185, 129)',
+        'rgb(168, 85, 247)'
       ],
       borderWidth: 2
     }]

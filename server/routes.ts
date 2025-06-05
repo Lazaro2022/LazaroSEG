@@ -484,6 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           certidoes: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Certidão').length,
           relatorios: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Relatório').length,
           oficios: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Ofício').length,
+          extincoes: [...activeDocuments, ...archivedDocuments].filter(doc => doc.type === 'Extinção').length,
         },
         dailyProduction: generateRealDailyProduction([...activeDocuments, ...archivedDocuments]),
         monthlyTrends: generateRealMonthlyTrends([...activeDocuments, ...archivedDocuments]),
@@ -513,6 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               certidoes: userDocuments.filter(doc => doc.type === 'Certidão').length,
               relatorios: userDocuments.filter(doc => doc.type === 'Relatório').length,
               oficios: userDocuments.filter(doc => doc.type === 'Ofício').length,
+              extincoes: userDocuments.filter(doc => doc.type === 'Extinção').length,
             },
             monthlyProduction: [],
           };
