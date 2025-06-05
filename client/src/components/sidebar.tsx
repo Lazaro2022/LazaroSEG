@@ -28,14 +28,11 @@ export function Sidebar() {
             <Shield className="w-6 h-6 text-black" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-yellow-400 tracking-wide">
-              Lazarus CG
-            </h1>
+            <h1 className="text-xl font-bold text-yellow-400 tracking-wide">Lazarus </h1>
             <p className="text-xs text-gray-400">Sistema de Controle</p>
           </div>
         </Link>
       </div>
-      
       {/* Navigation Menu */}
       <nav className="flex-1 px-4 py-8">
         <ul className="space-y-2">
