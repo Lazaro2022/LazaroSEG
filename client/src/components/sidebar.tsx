@@ -29,7 +29,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-yellow-400 tracking-wide">Lazarus </h1>
-            <p className="text-xs text-gray-400">Sistema de Controle Doccumentos Judiciais</p>
+            <p className="text-xs text-gray-400">Sistema de Controle Documentos Judiciais</p>
           </div>
         </Link>
       </div>
