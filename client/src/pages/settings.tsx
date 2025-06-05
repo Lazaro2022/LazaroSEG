@@ -229,6 +229,36 @@ export default function SettingsPage() {
     },
   });
 
+  const clearCacheMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/system/clear-cache", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to clear cache");
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate all queries to force refetch
+      queryClient.invalidateQueries();
+      // Clear localStorage if needed
+      if (typeof Storage !== "undefined") {
+        localStorage.clear();
+      }
+      toast({
+        title: "Cache limpo",
+        description: "O cache do sistema foi limpo com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao limpar cache",
+        description: "Falha ao limpar o cache do sistema.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEditUser = (user: UserType) => {
     setEditingUser(user);
     form.reset({
@@ -870,8 +900,13 @@ export default function SettingsPage() {
                       >
                         {exportDataMutation.isPending ? "Exportando..." : "Exportar Dados"}
                       </Button>
-                      <Button variant="outline" className="bg-gray-700/50">
-                        Limpar Cache
+                      <Button 
+                        variant="outline" 
+                        className="bg-gray-700/50"
+                        onClick={() => clearCacheMutation.mutate()}
+                        disabled={clearCacheMutation.isPending}
+                      >
+                        {clearCacheMutation.isPending ? "Limpando..." : "Limpar Cache"}
                       </Button>
                       <Button variant="outline" className="bg-red-600/20 text-red-400 border-red-500/30">
                         Reiniciar Sistema

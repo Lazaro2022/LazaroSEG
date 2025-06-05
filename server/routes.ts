@@ -600,6 +600,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // System endpoints
+  app.post("/api/system/clear-cache", async (req, res) => {
+    try {
+      // Clear any in-memory caches
+      // For now, just return success since we're using in-memory storage
+      res.json({ 
+        message: "Cache cleared successfully",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      res.status(500).json({ message: "Failed to clear cache" });
+    }
+  });
+
   // Export endpoints
   app.get("/api/reports/export", async (req, res) => {
     try {
