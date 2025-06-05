@@ -368,9 +368,7 @@ export default function SettingsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="glass-morphism-dark border-white/10">
-                          <SelectItem value="america/sao_paulo">América/São Paulo (UTC-3)</SelectItem>
-                          <SelectItem value="america/manaus">América/Manaus (UTC-4)</SelectItem>
-                          <SelectItem value="america/rio_branco">América/Rio Branco (UTC-5)</SelectItem>
+                          <SelectItem value="america/manaus">Brasil/Manaus (UTC-4)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
