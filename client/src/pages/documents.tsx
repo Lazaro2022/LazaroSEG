@@ -74,7 +74,7 @@ export default function DocumentsPage() {
 
   const archivedDocumentsQuery = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents/archived"],
-    enabled: isArchivedOpen,
+    enabled: true, // Always load to show count in button
   });
 
   const createMutation = useMutation({
@@ -354,17 +354,22 @@ export default function DocumentsPage() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">Gerenciamento de Documentos</h1>
-                <p className="text-gray-400">Controle e acompanhamento de documentos judiciais 3º execução</p>
+                <p className="text-gray-400">Controle e acompanhamento de processos administrativos</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={() => setIsArchivedOpen(true)}
                   variant="outline"
-                  className="bg-purple-600/20 text-purple-400 border-purple-600/30 hover:bg-purple-600/30"
+                  className="bg-purple-600/20 text-purple-400 border-purple-600/30 hover:bg-purple-600/30 relative"
                 >
                   <Archive className="w-4 h-4 mr-2" />
                   Nos Autos
+                  {archivedDocumentsQuery.data && archivedDocumentsQuery.data.length > 0 && (
+                    <Badge className="ml-2 bg-purple-500 text-white text-xs px-2 py-0">
+                      {archivedDocumentsQuery.data.length}
+                    </Badge>
+                  )}
                 </Button>
 
                 <Dialog open={isNewDocumentOpen} onOpenChange={setIsNewDocumentOpen}>
@@ -760,91 +765,129 @@ export default function DocumentsPage() {
 
             {/* Archived Documents Dialog */}
             <Dialog open={isArchivedOpen} onOpenChange={setIsArchivedOpen}>
-              <DialogContent className="glass-morphism-dark border-white/10 max-w-4xl">
+              <DialogContent className="glass-morphism-dark border-white/10 max-w-6xl max-h-[80vh]">
                 <DialogHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <DialogTitle className="text-xl font-semibold">Nos Autos - Documentos Arquivados</DialogTitle>
-                      <p className="text-gray-400 text-sm">
-                        Documentos que foram lidos e juntados no processo
+                      <DialogTitle className="text-2xl font-semibold text-white flex items-center gap-2">
+                        <Archive className="w-6 h-6 text-purple-400" />
+                        Nos Autos - Documentos Arquivados
+                      </DialogTitle>
+                      <p className="text-gray-400 text-sm mt-1">
+                        Documentos que foram lidos e juntados no processo • Total: {archivedDocumentsQuery.data?.length || 0}
                       </p>
                     </div>
                     <Button
                       variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsArchivedOpen(false);
-                      }}
+                      onClick={() => setIsArchivedOpen(false)}
                       className="bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600 hover:text-white"
                     >
-                      Voltar ao Menu
+                      Fechar
                     </Button>
                   </div>
                 </DialogHeader>
-                <div className="max-h-96 overflow-y-auto">
+                
+                <div className="overflow-hidden">
                   {archivedDocumentsQuery.isLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-                      <p className="text-gray-400 mt-2">Carregando documentos arquivados...</p>
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+                      <p className="text-gray-400">Carregando documentos arquivados...</p>
                     </div>
                   ) : archivedDocumentsQuery.data && archivedDocumentsQuery.data.length > 0 ? (
-                    <div className="space-y-3">
-                      {archivedDocumentsQuery.data.map((doc: DocumentWithUser) => (
-                        <div key={doc.id} className="p-4 bg-gray-800/50 rounded-lg border border-gray-600/30">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <span className="font-mono text-blue-400 text-sm font-medium">
-                                  {doc.processNumber}
-                                </span>
-                                <Badge className="bg-gray-600/30 text-gray-300 border-gray-500/30">
-                                  {doc.type}
-                                </Badge>
-                                <Badge className="bg-green-600/20 text-green-400 border-green-500/30">
-                                  Arquivado
-                                </Badge>
+                    <div className="max-h-[50vh] overflow-y-auto pr-2">
+                      <div className="space-y-4">
+                        {archivedDocumentsQuery.data.map((doc: DocumentWithUser) => (
+                          <div key={doc.id} className="p-4 bg-gradient-to-r from-gray-800/80 to-gray-700/50 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 space-y-3">
+                                {/* Header with process number and badges */}
+                                <div className="flex items-center space-x-3">
+                                  <span className="font-mono text-blue-400 text-lg font-bold bg-blue-500/10 px-3 py-1 rounded">
+                                    {doc.processNumber}
+                                  </span>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`${typeConfig[doc.type as keyof typeof typeConfig]?.className} border font-medium`}
+                                  >
+                                    {doc.type}
+                                  </Badge>
+                                  <Badge className="bg-purple-600/20 text-purple-300 border-purple-500/30 font-medium">
+                                    📁 Arquivado
+                                  </Badge>
+                                </div>
+                                
+                                {/* Prisoner name */}
+                                <div>
+                                  <h3 className="text-white font-semibold text-lg">{doc.prisonerName}</h3>
+                                </div>
+                                
+                                {/* Metadata */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                                  <div className="flex items-center gap-2">
+                                    <CalendarIcon className="w-4 h-4" />
+                                    <span>Arquivado: {format(new Date(doc.archivedAt || doc.completedAt || doc.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                                  </div>
+                                  {doc.assignedUser && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                                        {doc.assignedUser.initials}
+                                      </span>
+                                      <span>Responsável: {doc.assignedUser.name}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <CalendarIcon className="w-4 h-4" />
+                                    <span>Prazo original: {format(new Date(doc.deadline), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-xs">✓</span>
+                                    <span>Status: {doc.status}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-white font-medium">{doc.prisonerName}</p>
-                              <div className="flex items-center space-x-4 text-xs text-gray-400 mt-1">
-                                <span>Arquivado em: {format(new Date(doc.archivedAt || doc.completedAt || doc.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
-                                {doc.assignedUser && (
-                               
-                                  <span>Responsável: {doc.assignedUser.name}</span>
-                                )}
+                              
+                              {/* Action buttons */}
+                              <div className="flex flex-col gap-2 ml-4">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRestoreDocument(doc.id)}
+                                  className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30 transition-colors"
+                                  disabled={restoreMutation.isPending}
+                                >
+                                  <RotateCcw className="w-4 h-4 mr-2" />
+                                  Restaurar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDelete(doc.id)}
+                                  className="bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 transition-colors"
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Excluir
+                                </Button>
                               </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleRestoreDocument(doc.id)}
-                                className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30"
-                                disabled={restoreMutation.isPending}
-                              >
-                                <RotateCcw className="w-3 h-3 mr-1" />
-                                Restaurar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(doc.id)}
-                                className="bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
-                                disabled={deleteMutation.isPending}
-                              >
-                                <Trash2 className="w-3 h-3 mr-1" />
-                                Excluir
-                              </Button>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <Archive className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-400">Nenhum documento arquivado encontrado</p>
-                      <p className="text-gray-500 text-sm">Os documentos arquivados aparecerão aqui quando você arquivar documentos concluídos</p>
+                    <div className="text-center py-12">
+                      <div className="mb-6">
+                        <Archive className="w-16 h-16 text-gray-400 mx-auto mb-4 opacity-50" />
+                        <h3 className="text-xl font-semibold text-gray-400 mb-2">Nenhum documento arquivado</h3>
+                        <p className="text-gray-500 text-sm max-w-md mx-auto">
+                          Os documentos arquivados aparecerão aqui quando você marcar documentos como concluídos e depois arquivá-los.
+                        </p>
+                      </div>
+                      <div className="bg-gray-800/30 rounded-lg p-4 max-w-md mx-auto">
+                        <p className="text-xs text-gray-400">
+                          💡 <strong>Dica:</strong> Para arquivar um documento, primeiro marque-o como "Concluído", depois clique em "Arquivar"
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
