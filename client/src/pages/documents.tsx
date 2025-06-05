@@ -312,6 +312,35 @@ export default function DocumentsPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header />
+        
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent className="card-glass">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-300">
+                Tem certeza que deseja excluir este documento permanentemente? 
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel 
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
         <main className="flex-1 overflow-y-auto p-6">
           <div className="container mx-auto max-w-7xl space-y-6">
             {/* Header Section */}
@@ -775,16 +804,28 @@ export default function DocumentsPage() {
                                 )}
                               </div>
                             </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRestoreDocument(doc.id)}
-                              className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30"
-                              disabled={restoreMutation.isPending}
-                            >
-                              <RotateCcw className="w-3 h-3 mr-1" />
-                              Restaurar
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRestoreDocument(doc.id)}
+                                className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30"
+                                disabled={restoreMutation.isPending}
+                              >
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Restaurar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(doc.id)}
+                                className="bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
+                                disabled={deleteMutation.isPending}
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Excluir
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
