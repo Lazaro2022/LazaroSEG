@@ -317,7 +317,7 @@ export default function DocumentsPage() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:ml-64">
         <Header />
 
         {/* Delete Confirmation Dialog */}
@@ -351,13 +351,13 @@ export default function DocumentsPage() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="container mx-auto max-w-7xl space-y-6">
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Gerenciamento de Documentos</h1>
-                <p className="text-gray-400">Controle e acompanhamento de documentos judiciais</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Gerenciamento de Documentos</h1>
+                <p className="text-gray-400 text-sm md:text-base">Controle e acompanhamento de documentos judiciais</p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
                 <Button
                   onClick={() => setIsArchivedOpen(true)}
                   variant="outline"
@@ -515,16 +515,16 @@ export default function DocumentsPage() {
 
               <CardContent>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm min-w-[800px]">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Nº Processo</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Apenado</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Tipo</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Responsável</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Prazo Final</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Ações</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Nº Processo</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Apenado</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Tipo</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300 hidden lg:table-cell">Responsável</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Prazo</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Status</th>
+                        <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-300">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -546,15 +546,17 @@ export default function DocumentsPage() {
                             key={document.id} 
                             className="border-b border-white/5 hover:bg-white/5 transition-colors"
                           >
-                            <td className="py-4 px-4">
-                              <span className="font-mono text-blue-400">
+                            <td className="py-4 px-2 md:px-4">
+                              <span className="font-mono text-blue-400 text-xs md:text-sm">
                                 {document.processNumber}
                               </span>
                             </td>
-                            <td className="py-4 px-4 text-white">
-                              {document.prisonerName}
+                            <td className="py-4 px-2 md:px-4 text-white">
+                              <div className="max-w-[120px] md:max-w-none truncate">
+                                {document.prisonerName}
+                              </div>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-4 px-2 md:px-4">
                               <Badge 
                                 variant="outline" 
                                 className={`${typeConfig[document.type as keyof typeof typeConfig]?.className} border text-xs`}
@@ -562,13 +564,17 @@ export default function DocumentsPage() {
                                 {document.type}
                               </Badge>
                             </td>
-                            <td className="py-4 px-4 text-gray-300">
-                              {document.assignedUser?.name || "Não atribuído"}
+                            <td className="py-4 px-2 md:px-4 text-gray-300 hidden lg:table-cell">
+                              <div className="max-w-[100px] truncate">
+                                {document.assignedUser?.name || "Não atribuído"}
+                              </div>
                             </td>
-                            <td className="py-4 px-4 text-gray-300">
-                              {format(new Date(document.deadline), "dd/MM/yyyy", { locale: ptBR })}
+                            <td className="py-4 px-2 md:px-4 text-gray-300">
+                              <span className="text-xs md:text-sm">
+                                {format(new Date(document.deadline), "dd/MM", { locale: ptBR })}
+                              </span>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-4 px-2 md:px-4">
                               <Badge 
                                 variant="outline" 
                                 className={`${statusConfig[displayStatus as keyof typeof statusConfig]?.className} border text-xs`}
@@ -576,50 +582,50 @@ export default function DocumentsPage() {
                                 {displayStatus}
                               </Badge>
                             </td>
-                            <td className="py-4 px-4">
-                              <div className="flex items-center space-x-2">
+                            <td className="py-4 px-2 md:px-4">
+                              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
                                 {document.status === "Em Andamento" && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="pill-button bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-xs px-3 py-1"
+                                    className="pill-button bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
                                     onClick={() => completeMutation.mutate(document.id)}
                                     disabled={completeMutation.isPending}
                                   >
-                                    <CheckCircle className="w-3 h-3 mr-1" />
-                                    Concluir
+                                    <CheckCircle className="w-3 h-3 md:mr-1" />
+                                    <span className="hidden md:inline ml-1">Concluir</span>
                                   </Button>
                                 )}
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="pill-button bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30 text-xs px-3 py-1"
+                                  className="pill-button bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
                                   onClick={() => handleEdit(document)}
                                 >
-                                  <Edit className="w-3 h-3 mr-1" />
-                                  Editar
+                                  <Edit className="w-3 h-3 md:mr-1" />
+                                  <span className="hidden md:inline ml-1">Editar</span>
                                 </Button>
                                 {document.status === "Concluído" && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="pill-button bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 text-xs px-3 py-1"
+                                    className="pill-button bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
                                     onClick={() => handleArchiveDocument(document.id)}
                                     disabled={archiveMutation.isPending}
                                   >
-                                    <Archive className="w-3 h-3 mr-1" />
-                                    Arquivar
+                                    <Archive className="w-3 h-3 md:mr-1" />
+                                    <span className="hidden md:inline ml-1">Arquivar</span>
                                   </Button>
                                 )}
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="pill-button bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 text-xs px-3 py-1"
+                                  className="pill-button bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 text-xs px-2 md:px-3 py-1 w-full md:w-auto"
                                   onClick={() => handleDelete(document.id)}
                                   disabled={deleteMutation.isPending}
                                 >
-                                  <Trash2 className="w-3 h-3 mr-1" />
-                                  Excluir
+                                  <Trash2 className="w-3 h-3 md:mr-1" />
+                                  <span className="hidden md:inline ml-1">Excluir</span>
                                 </Button>
                               </div>
                             </td>
@@ -765,7 +771,7 @@ export default function DocumentsPage() {
 
             {/* Archived Documents Dialog */}
             <Dialog open={isArchivedOpen} onOpenChange={setIsArchivedOpen}>
-              <DialogContent className="glass-morphism-dark border-white/10 max-w-6xl max-h-[80vh]">
+              <DialogContent className="glass-morphism-dark border-white/10 max-w-[95vw] md:max-w-6xl max-h-[90vh] md:max-h-[80vh] p-4 md:p-6">
                 <DialogHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -794,24 +800,24 @@ export default function DocumentsPage() {
                       <p className="text-gray-400">Carregando documentos arquivados...</p>
                     </div>
                   ) : archivedDocumentsQuery.data && archivedDocumentsQuery.data.length > 0 ? (
-                    <div className="max-h-[50vh] overflow-y-auto pr-2">
+                    <div className="max-h-[50vh] md:max-h-[50vh] overflow-y-auto pr-2">
                       <div className="space-y-4">
                         {archivedDocumentsQuery.data.map((doc: DocumentWithUser) => (
-                          <div key={doc.id} className="p-4 bg-gradient-to-r from-gray-800/80 to-gray-700/50 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200">
-                            <div className="flex items-start justify-between">
+                          <div key={doc.id} className="p-3 md:p-4 bg-gradient-to-r from-gray-800/80 to-gray-700/50 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200">
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                               <div className="flex-1 space-y-3">
                                 {/* Header with process number and badges */}
-                                <div className="flex items-center space-x-3">
-                                  <span className="font-mono text-blue-400 text-lg font-bold bg-blue-500/10 px-3 py-1 rounded">
+                                <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                  <span className="font-mono text-blue-400 text-sm md:text-lg font-bold bg-blue-500/10 px-2 md:px-3 py-1 rounded">
                                     {doc.processNumber}
                                   </span>
                                   <Badge 
                                     variant="outline" 
-                                    className={`${typeConfig[doc.type as keyof typeof typeConfig]?.className} border font-medium`}
+                                    className={`${typeConfig[doc.type as keyof typeof typeConfig]?.className} border font-medium text-xs`}
                                   >
                                     {doc.type}
                                   </Badge>
-                                  <Badge className="bg-purple-600/20 text-purple-300 border-purple-500/30 font-medium">
+                                  <Badge className="bg-purple-600/20 text-purple-300 border-purple-500/30 font-medium text-xs">
                                     📁 Arquivado
                                   </Badge>
                                 </div>
@@ -822,7 +828,7 @@ export default function DocumentsPage() {
                                 </div>
                                 
                                 {/* Metadata */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                                <div className="grid grid-cols-1 gap-2 text-xs md:text-sm text-gray-400">
                                   <div className="flex items-center gap-2">
                                     <CalendarIcon className="w-4 h-4" />
                                     <span>Arquivado: {format(new Date(doc.archivedAt || doc.completedAt || doc.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
@@ -847,26 +853,26 @@ export default function DocumentsPage() {
                               </div>
                               
                               {/* Action buttons */}
-                              <div className="flex flex-col gap-2 ml-4">
+                              <div className="flex flex-row md:flex-col gap-2 md:ml-4 w-full md:w-auto">
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleRestoreDocument(doc.id)}
-                                  className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30 transition-colors"
+                                  className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30 transition-colors flex-1 md:flex-none"
                                   disabled={restoreMutation.isPending}
                                 >
-                                  <RotateCcw className="w-4 h-4 mr-2" />
-                                  Restaurar
+                                  <RotateCcw className="w-4 h-4 mr-1 md:mr-2" />
+                                  <span className="text-xs md:text-sm">Restaurar</span>
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleDelete(doc.id)}
-                                  className="bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 transition-colors"
+                                  className="bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 transition-colors flex-1 md:flex-none"
                                   disabled={deleteMutation.isPending}
                                 >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Excluir
+                                  <Trash2 className="w-4 h-4 mr-1 md:mr-2" />
+                                  <span className="text-xs md:text-sm">Excluir</span>
                                 </Button>
                               </div>
                             </div>

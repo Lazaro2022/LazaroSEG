@@ -4,6 +4,24 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Mobile viewport adjustments */
+@media (max-width: 768px) {
+  .glass-morphism-dark {
+    backdrop-filter: blur(12px);
+  }
+  
+  /* Ensure proper touch targets */
+  button {
+    min-height: 44px;
+  }
+  
+  /* Improve text readability on mobile */
+  .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+}
+
 :root {
   --background: 240 10% 3.9%; /* #0f172a */
   --foreground: 0 0% 98%; /* #fafafa */
