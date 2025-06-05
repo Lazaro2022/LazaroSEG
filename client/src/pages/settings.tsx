@@ -300,7 +300,6 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
-      
       <main className="flex-1 ml-64 flex flex-col">
         <Header />
         
@@ -876,7 +875,7 @@ export default function SettingsPage() {
                       
                       <div>
                         <Label className="text-gray-400">Banco de Dados</Label>
-                        <p className="text-white">Em Memória</p>
+                        <p className="text-white">EM PostgreSQL Neon</p>
                       </div>
                       
                       <div>
