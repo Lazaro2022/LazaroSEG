@@ -19,6 +19,7 @@ import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import type { User as UserType, InsertUser } from "@shared/schema";
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 
 const userFormSchema = z.object({
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
@@ -191,6 +192,38 @@ export default function SettingsPage() {
       toast({
         title: "Erro",
         description: "Falha ao remover usuário.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const exportDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/reports/export?format=json&period=all");
+      if (!response.ok) throw new Error("Failed to export data");
+      
+      const data = await response.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `dados-sistema-completo-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Dados exportados",
+        description: "Os dados do sistema foram exportados com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro na exportação",
+        description: "Falha ao exportar os dados do sistema.",
         variant: "destructive",
       });
     },
@@ -829,8 +862,13 @@ export default function SettingsPage() {
                     <h3 className="text-lg font-medium">Ações do Sistema</h3>
                     
                     <div className="flex space-x-4">
-                      <Button variant="outline" className="bg-gray-700/50">
-                        Exportar Dados
+                      <Button 
+                        variant="outline" 
+                        className="bg-gray-700/50"
+                        onClick={() => exportDataMutation.mutate()}
+                        disabled={exportDataMutation.isPending}
+                      >
+                        {exportDataMutation.isPending ? "Exportando..." : "Exportar Dados"}
                       </Button>
                       <Button variant="outline" className="bg-gray-700/50">
                         Limpar Cache
