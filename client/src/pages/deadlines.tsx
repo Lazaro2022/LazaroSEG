@@ -483,7 +483,7 @@ export default function DeadlinesPage() {
             </Card>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
