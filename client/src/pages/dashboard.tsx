@@ -7,35 +7,25 @@ import { TemporalAnalytics } from "@/components/temporal-analytics";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Dashboard() {
-  const dashboardStats = useQuery({
+  const { data: dashboardStats } = useQuery({
     queryKey: ["/api/dashboard/stats"],
   });
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <Sidebar />
+    <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
+      <KpiCards />
+      <ChartsPanel />
       
-      <main className="flex-1 md:ml-64 ml-0 flex flex-col">
-        <Header />
-        
-        <div className="flex-1 p-3 md:p-6 overflow-y-auto">
-          <div className="space-y-4 md:space-y-6">
-            <KpiCards />
-            <ChartsPanel />
-            
-            {/* Análise Temporal */}
-            {dashboardStats.data?.monthlyData && dashboardStats.data?.yearlyComparison && (
-              <div className="mt-8">
-                <h2 className="text-xl font-bold text-white mb-4">Análise Temporal</h2>
-                <TemporalAnalytics 
-                  monthlyData={dashboardStats.data.monthlyData}
-                  yearlyComparison={dashboardStats.data.yearlyComparison}
-                />
-              </div>
-            )}
-          </div>
+      {/* Análise Temporal */}
+      {dashboardStats?.monthlyData && dashboardStats?.yearlyComparison && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-white mb-4">Análise Temporal</h2>
+          <TemporalAnalytics 
+            monthlyData={dashboardStats.monthlyData}
+            yearlyComparison={dashboardStats.yearlyComparison}
+          />
         </div>
-      </main>
+      )}
     </div>
   );
 }
