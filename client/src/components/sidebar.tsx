@@ -32,7 +32,6 @@ export function Sidebar() {
       >
         {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
-
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -40,7 +39,6 @@ export function Sidebar() {
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
-
       {/* Sidebar */}
       <aside className={`
         w-64 glass-morphism-dark fixed left-0 top-0 h-full z-50 flex flex-col transition-transform duration-300
@@ -54,7 +52,7 @@ export function Sidebar() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-yellow-400 tracking-wide">Lazarus</h1>
-              <p className="text-xs text-gray-400 hidden sm:block">Sistema de Controle Documentos Judiciais</p>
+              <p className="text-xs hidden sm:block text-[#e5c519]">Sistema de Controle Documentos Judiciais</p>
             </div>
           </Link>
         </div>
