@@ -12,7 +12,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
       <KpiCards />
       <ChartsPanel />
       
