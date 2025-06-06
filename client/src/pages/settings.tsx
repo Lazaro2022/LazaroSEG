@@ -1027,6 +1027,170 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
+
+      {/* Dialog de confirmação para remover usuário */}
+      <Dialog open={deleteUserConfirmOpen} onOpenChange={setDeleteUserConfirmOpen}>
+        <DialogContent className="glass-morphism-dark border-white/10 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400">Confirmar Remoção de Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-300 text-sm">
+              Esta ação é irreversível. Digite a senha de administrador para confirmar a remoção do usuário.
+            </p>
+            <Form {...deletePasswordForm}>
+              <form onSubmit={deletePasswordForm.handleSubmit(confirmDeleteUser)} className="space-y-4">
+                <FormField
+                  control={deletePasswordForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha de Administrador</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Digite a senha..." 
+                          className="bg-gray-800/50 border-gray-600/30"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setDeleteUserConfirmOpen(false);
+                      deletePasswordForm.reset();
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="destructive"
+                    disabled={deleteUserMutation.isPending}
+                  >
+                    {deleteUserMutation.isPending ? "Removendo..." : "Confirmar Remoção"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação para limpar cache */}
+      <Dialog open={clearCacheConfirmOpen} onOpenChange={setClearCacheConfirmOpen}>
+        <DialogContent className="glass-morphism-dark border-white/10 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-yellow-400">Confirmar Limpeza de Cache</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-300 text-sm">
+              Limpar o cache pode afetar temporariamente a performance do sistema. Digite a senha de administrador para confirmar.
+            </p>
+            <Form {...cachePasswordForm}>
+              <form onSubmit={cachePasswordForm.handleSubmit(confirmClearCache)} className="space-y-4">
+                <FormField
+                  control={cachePasswordForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha de Administrador</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Digite a senha..." 
+                          className="bg-gray-800/50 border-gray-600/30"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setClearCacheConfirmOpen(false);
+                      cachePasswordForm.reset();
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                    disabled={clearCacheMutation.isPending}
+                  >
+                    {clearCacheMutation.isPending ? "Limpando..." : "Confirmar Limpeza"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação para reiniciar sistema */}
+      <Dialog open={restartSystemConfirmOpen} onOpenChange={setRestartSystemConfirmOpen}>
+        <DialogContent className="glass-morphism-dark border-white/10 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400">Confirmar Reinicialização do Sistema</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-300 text-sm">
+              ⚠️ ATENÇÃO: Esta ação reiniciará todo o sistema e causará indisponibilidade temporária. Digite a senha de administrador para confirmar.
+            </p>
+            <Form {...restartPasswordForm}>
+              <form onSubmit={restartPasswordForm.handleSubmit(confirmRestartSystem)} className="space-y-4">
+                <FormField
+                  control={restartPasswordForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha de Administrador</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Digite a senha..." 
+                          className="bg-gray-800/50 border-gray-600/30"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setRestartSystemConfirmOpen(false);
+                      restartPasswordForm.reset();
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="destructive"
+                  >
+                    Confirmar Reinicialização
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
