@@ -442,45 +442,50 @@ export function DocumentsTable() {
             activeDocuments.map((document) => (
               <div
                 key={document.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                className="flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors gap-3 md:gap-0"
               >
                 <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium text-white">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
+                    <span className="font-medium text-white text-sm md:text-base">
                       {document.processNumber}
                     </span>
-                    <Badge
-                      className={typeConfig[document.type as keyof typeof typeConfig]?.className}
-                    >
-                      {document.type}
-                    </Badge>
-                    <Badge
-                      className={statusConfig[document.status as keyof typeof statusConfig]?.className}
-                    >
-                      {document.status}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge
+                        className={`${typeConfig[document.type as keyof typeof typeConfig]?.className} text-xs`}
+                      >
+                        {document.type}
+                      </Badge>
+                      <Badge
+                        className={`${statusConfig[document.status as keyof typeof statusConfig]?.className} text-xs`}
+                      >
+                        {document.status}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-300">
-                    <span className="font-medium">{document.prisonerName}</span>
-                    <span className="mx-2">•</span>
-                    <span>Prazo: {format(new Date(document.deadline), "dd/MM/yyyy", { locale: ptBR })}</span>
+                  <div className="text-xs md:text-sm text-gray-300 space-y-1 md:space-y-0">
+                    <div className="font-medium">{document.prisonerName}</div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span>Prazo: {format(new Date(document.deadline), "dd/MM/yyyy", { locale: ptBR })}</span>
+                      {document.assignedUser && (
+                        <span className="hidden sm:inline">• Responsável: {document.assignedUser.name}</span>
+                      )}
+                    </div>
                     {document.assignedUser && (
-                      <>
-                        <span className="mx-2">•</span>
-                        <span>Responsável: {document.assignedUser.name}</span>
-                      </>
+                      <div className="sm:hidden text-gray-400">
+                        Responsável: {document.assignedUser.name}
+                      </div>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-2 md:mt-0">
                   {document.status !== "Concluído" && (
                     <Button
                       size="sm"
                       onClick={() => handleComplete(document.id)}
                       disabled={completeMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0"
                     >
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-3 h-3 md:w-4 md:h-4" />
                     </Button>
                   )}
                   <Button
@@ -488,26 +493,27 @@ export function DocumentsTable() {
                     variant="outline"
                     onClick={() => handleEdit(document)}
                     disabled={editMutation.isPending}
+                    className="h-8 w-8 p-0"
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit className="w-3 h-3 md:w-4 md:h-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleArchive(document.id)}
                     disabled={archiveMutation.isPending}
-                    className="text-yellow-400 border-yellow-400/20 hover:bg-yellow-400/10"
+                    className="text-yellow-400 border-yellow-400/20 hover:bg-yellow-400/10 h-8 w-8 p-0"
                   >
-                    <Archive className="w-4 h-4" />
+                    <Archive className="w-3 h-3 md:w-4 md:h-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleDelete(document.id)}
                     disabled={deleteMutation.isPending}
-                    className="text-red-400 border-red-400/20 hover:bg-red-400/10"
+                    className="text-red-400 border-red-400/20 hover:bg-red-400/10 h-8 w-8 p-0"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                   </Button>
                 </div>
               </div>
