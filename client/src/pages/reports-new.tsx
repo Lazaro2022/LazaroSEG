@@ -156,15 +156,15 @@ export default function ReportsPage() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 md:ml-64 ml-0 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-white">Relatórios de Produtividade</h1>
-                <p className="text-gray-300 mt-1">Análise detalhada do desempenho do sistema</p>
+                <h1 className="text-xl md:text-3xl font-bold text-white">Relatórios de Produtividade</h1>
+                <p className="text-gray-300 mt-1 text-sm md:text-base">Análise detalhada do desempenho do sistema</p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
@@ -192,7 +192,7 @@ export default function ReportsPage() {
 
             {/* KPI Summary */}
             {productivityData && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                 <Card className="card-glass">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
