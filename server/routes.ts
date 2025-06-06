@@ -191,6 +191,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Monthly data for temporal analytics
+  app.get("/api/dashboard/monthly-data", async (req, res) => {
+    try {
+      const monthlyData = await storage.getMonthlyData();
+      res.json(monthlyData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch monthly data" });
+    }
+  });
+
+  // Yearly comparison data
+  app.get("/api/dashboard/yearly-comparison", async (req, res) => {
+    try {
+      const yearlyComparison = await storage.getYearlyComparison();
+      res.json(yearlyComparison);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch yearly comparison" });
+    }
+  });
+
   // Documents
   app.get("/api/documents", async (req, res) => {
     try {

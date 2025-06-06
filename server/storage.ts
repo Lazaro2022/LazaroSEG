@@ -32,6 +32,8 @@ export interface IStorage {
   getDashboardStats(): Promise<DashboardStats>;
   getDocumentTypeStats(): Promise<DocumentTypeStats>;
   getNextDeadline(): Promise<Date | null>;
+  getMonthlyData(): Promise<MonthlyStats[]>;
+  getYearlyComparison(): Promise<YearlyComparison>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -430,12 +432,10 @@ export class DatabaseStorage implements IStorage {
       inProgress,
       completed,
       overdue,
-      monthlyData,
-      yearlyComparison,
     };
   }
 
-  private async getMonthlyData(): Promise<MonthlyStats[]> {
+  async getMonthlyData(): Promise<MonthlyStats[]> {
     const allDocuments = await db.select().from(documents);
     const now = new Date();
     const monthlyStats: MonthlyStats[] = [];
@@ -468,7 +468,6 @@ export class DatabaseStorage implements IStorage {
 
       monthlyStats.push({
         month: date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
-        year: date.getFullYear(),
         created,
         completed,
         completionRate,
@@ -478,7 +477,7 @@ export class DatabaseStorage implements IStorage {
     return monthlyStats;
   }
 
-  private async getYearlyComparison(): Promise<YearlyComparison> {
+  async getYearlyComparison(): Promise<YearlyComparison> {
     const allDocuments = await db.select().from(documents);
     const currentYear = new Date().getFullYear();
     const previousYear = currentYear - 1;
