@@ -1,4 +1,4 @@
-import { users, documents, servers, type User, type InsertUser, type Document, type InsertDocument, type Server, type InsertServer, type DocumentWithUser, type ServerWithUser, type DashboardStats, type DocumentTypeStats } from "@shared/schema";
+import { users, documents, servers, type User, type InsertUser, type Document, type InsertDocument, type Server, type InsertServer, type DocumentWithUser, type ServerWithUser, type DashboardStats, type DocumentTypeStats, type MonthlyStats, type YearlyComparison } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, ne, gt, count } from "drizzle-orm";
 
@@ -412,8 +412,6 @@ export class DatabaseStorage implements IStorage {
     const completedActive = activeDocuments.filter(doc => doc.status === "Concluído").length;
     const completed = completedActive + archivedDocuments.length;
     
-
-    
     // Documentos vencidos (apenas entre os ativos)
     const now = new Date();
     const overdue = activeDocuments.filter(doc => {
@@ -421,11 +419,133 @@ export class DatabaseStorage implements IStorage {
       return deadline < now && doc.status !== 'Concluído';
     }).length;
 
+    // Gerar dados mensais dos últimos 12 meses
+    const monthlyData = await this.getMonthlyData();
+    
+    // Gerar comparação anual
+    const yearlyComparison = await this.getYearlyComparison();
+
     return {
       totalDocuments,
       inProgress,
       completed,
       overdue,
+      monthlyData,
+      yearlyComparison,
+    };
+  }
+
+  private async getMonthlyData(): Promise<MonthlyStats[]> {
+    const allDocuments = await db.select().from(documents);
+    const now = new Date();
+    const monthlyStats: MonthlyStats[] = [];
+
+    // Últimos 12 meses
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+      
+      const monthDocuments = allDocuments.filter(doc => {
+        const createdAt = new Date(doc.createdAt);
+        return createdAt >= date && createdAt < nextMonth;
+      });
+
+      const completedInMonth = allDocuments.filter(doc => {
+        if (doc.status === "Concluído" && doc.completedAt) {
+          const completedAt = new Date(doc.completedAt);
+          return completedAt >= date && completedAt < nextMonth;
+        }
+        if (doc.isArchived && doc.archivedAt) {
+          const archivedAt = new Date(doc.archivedAt);
+          return archivedAt >= date && archivedAt < nextMonth;
+        }
+        return false;
+      });
+
+      const created = monthDocuments.length;
+      const completed = completedInMonth.length;
+      const completionRate = created > 0 ? Math.round((completed / created) * 100) : 0;
+
+      monthlyStats.push({
+        month: date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+        year: date.getFullYear(),
+        created,
+        completed,
+        completionRate,
+      });
+    }
+
+    return monthlyStats;
+  }
+
+  private async getYearlyComparison(): Promise<YearlyComparison> {
+    const allDocuments = await db.select().from(documents);
+    const currentYear = new Date().getFullYear();
+    const previousYear = currentYear - 1;
+
+    // Dados do ano atual
+    const currentYearDocs = allDocuments.filter(doc => {
+      const createdAt = new Date(doc.createdAt);
+      return createdAt.getFullYear() === currentYear;
+    });
+
+    const currentYearCompleted = allDocuments.filter(doc => {
+      if (doc.status === "Concluído" && doc.completedAt) {
+        const completedAt = new Date(doc.completedAt);
+        return completedAt.getFullYear() === currentYear;
+      }
+      if (doc.isArchived && doc.archivedAt) {
+        const archivedAt = new Date(doc.archivedAt);
+        return archivedAt.getFullYear() === currentYear;
+      }
+      return false;
+    });
+
+    // Dados do ano anterior
+    const previousYearDocs = allDocuments.filter(doc => {
+      const createdAt = new Date(doc.createdAt);
+      return createdAt.getFullYear() === previousYear;
+    });
+
+    const previousYearCompleted = allDocuments.filter(doc => {
+      if (doc.status === "Concluído" && doc.completedAt) {
+        const completedAt = new Date(doc.completedAt);
+        return completedAt.getFullYear() === previousYear;
+      }
+      if (doc.isArchived && doc.archivedAt) {
+        const archivedAt = new Date(doc.archivedAt);
+        return archivedAt.getFullYear() === previousYear;
+      }
+      return false;
+    });
+
+    const currentYearCompletionRate = currentYearDocs.length > 0 
+      ? Math.round((currentYearCompleted.length / currentYearDocs.length) * 100) 
+      : 0;
+
+    const previousYearCompletionRate = previousYearDocs.length > 0 
+      ? Math.round((previousYearCompleted.length / previousYearDocs.length) * 100) 
+      : 0;
+
+    // Calcular taxa de crescimento
+    const growthRate = previousYearDocs.length > 0 
+      ? Math.round(((currentYearDocs.length - previousYearDocs.length) / previousYearDocs.length) * 100)
+      : currentYearDocs.length > 0 ? 100 : 0;
+
+    return {
+      currentYear: {
+        year: currentYear,
+        totalDocuments: currentYearDocs.length,
+        completedDocuments: currentYearCompleted.length,
+        completionRate: currentYearCompletionRate,
+      },
+      previousYear: {
+        year: previousYear,
+        totalDocuments: previousYearDocs.length,
+        completedDocuments: previousYearCompleted.length,
+        completionRate: previousYearCompletionRate,
+      },
+      growthRate,
     };
   }
 

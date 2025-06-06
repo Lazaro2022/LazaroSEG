@@ -109,6 +109,32 @@ export type DashboardStats = {
   inProgress: number;
   completed: number;
   overdue: number;
+  monthlyData: MonthlyStats[];
+  yearlyComparison: YearlyComparison;
+};
+
+export type MonthlyStats = {
+  month: string;
+  year: number;
+  created: number;
+  completed: number;
+  completionRate: number;
+};
+
+export type YearlyComparison = {
+  currentYear: {
+    year: number;
+    totalDocuments: number;
+    completedDocuments: number;
+    completionRate: number;
+  };
+  previousYear: {
+    year: number;
+    totalDocuments: number;
+    completedDocuments: number;
+    completionRate: number;
+  };
+  growthRate: number;
 };
 
 export type DocumentTypeStats = {

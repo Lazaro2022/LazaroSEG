@@ -3,6 +3,8 @@ import { Header } from "@/components/header";
 import { KpiCards } from "@/components/kpi-cards";
 import { ChartsPanel } from "@/components/charts-panel";
 import { DocumentsTable } from "@/components/documents-table";
+import { TemporalAnalytics } from "@/components/temporal-analytics";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Dashboard() {
   return (
