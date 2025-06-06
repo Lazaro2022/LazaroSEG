@@ -242,7 +242,7 @@ export default function DocumentsPage() {
 
   const confirmDelete = (data: DeletePasswordData) => {
     // Senha de segurança para exclusão (pode ser configurada via API)
-    const ADMIN_PASSWORD = "admin123";
+    const ADMIN_PASSWORD = "Guardiao";
     
     if (data.password !== ADMIN_PASSWORD) {
       toast({

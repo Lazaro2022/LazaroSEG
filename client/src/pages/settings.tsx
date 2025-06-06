@@ -29,7 +29,12 @@ const userFormSchema = z.object({
   initials: z.string().min(2, "Iniciais devem ter pelo menos 2 caracteres").max(3, "Iniciais devem ter no máximo 3 caracteres"),
 });
 
+const adminPasswordSchema = z.object({
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
 type UserFormData = z.infer<typeof userFormSchema>;
+type AdminPasswordData = z.infer<typeof adminPasswordSchema>;
 
 interface SystemSettings {
   system_name: string;
@@ -46,6 +51,10 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [deleteUserConfirmOpen, setDeleteUserConfirmOpen] = useState(false);
+  const [clearCacheConfirmOpen, setClearCacheConfirmOpen] = useState(false);
+  const [restartSystemConfirmOpen, setRestartSystemConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
     system_name: "Lazarus CG - Sistema de Controle",
     institution: "Unidade Prisional - Manaus/AM", 
@@ -79,6 +88,27 @@ export default function SettingsPage() {
       name: "",
       role: "",
       initials: "",
+    },
+  });
+
+  const deletePasswordForm = useForm<AdminPasswordData>({
+    resolver: zodResolver(adminPasswordSchema),
+    defaultValues: {
+      password: "",
+    },
+  });
+
+  const cachePasswordForm = useForm<AdminPasswordData>({
+    resolver: zodResolver(adminPasswordSchema),
+    defaultValues: {
+      password: "",
+    },
+  });
+
+  const restartPasswordForm = useForm<AdminPasswordData>({
+    resolver: zodResolver(adminPasswordSchema),
+    defaultValues: {
+      password: "",
     },
   });
 
@@ -272,10 +302,76 @@ export default function SettingsPage() {
   };
 
   const handleDeleteUser = (id: number) => {
-    if (confirm("Tem certeza que deseja remover este usuário?")) {
-      deleteUserMutation.mutate(id);
+    setUserToDelete(id);
+    setDeleteUserConfirmOpen(true);
+  };
+
+  const confirmDeleteUser = (data: AdminPasswordData) => {
+    // Senha de segurança para remoção de usuário
+    const ADMIN_PASSWORD = "Guardiao";
+    
+    if (data.password !== ADMIN_PASSWORD) {
+      toast({
+        title: "Senha incorreta",
+        description: "A senha de administrador está incorreta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (userToDelete) {
+      deleteUserMutation.mutate(userToDelete);
+      setDeleteUserConfirmOpen(false);
+      setUserToDelete(null);
+      deletePasswordForm.reset();
     }
   };
+
+  const confirmClearCache = (data: AdminPasswordData) => {
+    // Senha de segurança para limpeza de cache
+    const ADMIN_PASSWORD = "Guardiao";
+    
+    if (data.password !== ADMIN_PASSWORD) {
+      toast({
+        title: "Senha incorreta",
+        description: "A senha de administrador está incorreta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    clearCacheMutation.mutate();
+    setClearCacheConfirmOpen(false);
+    cachePasswordForm.reset();
+  };
+
+  const confirmRestartSystem = (data: AdminPasswordData) => {
+    // Senha de segurança para reiniciar sistema
+    const ADMIN_PASSWORD = "Guardiao";
+    
+    if (data.password !== ADMIN_PASSWORD) {
+      toast({
+        title: "Senha incorreta",
+        description: "A senha de administrador está incorreta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Implementar reinicialização do sistema
+    toast({
+      title: "Sistema reiniciando",
+      description: "O sistema será reiniciado em instantes...",
+    });
+    
+    // Simular reinicialização (em produção seria uma chamada à API)
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+    
+    setRestartSystemConfirmOpen(false);
+    restartPasswordForm.reset();
+  };;
 
   const onSubmit = (data: UserFormData) => {
     const submitData = {
@@ -902,12 +998,16 @@ export default function SettingsPage() {
                       <Button 
                         variant="outline" 
                         className="bg-gray-700/50"
-                        onClick={() => clearCacheMutation.mutate()}
+                        onClick={() => setClearCacheConfirmOpen(true)}
                         disabled={clearCacheMutation.isPending}
                       >
                         {clearCacheMutation.isPending ? "Limpando..." : "Limpar Cache"}
                       </Button>
-                      <Button variant="outline" className="bg-red-600/20 text-red-400 border-red-500/30">
+                      <Button 
+                        variant="outline" 
+                        className="bg-red-600/20 text-red-400 border-red-500/30"
+                        onClick={() => setRestartSystemConfirmOpen(true)}
+                      >
                         Reiniciar Sistema
                       </Button>
                     </div>
