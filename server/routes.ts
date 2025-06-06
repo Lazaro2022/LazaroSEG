@@ -159,6 +159,15 @@ function generateRealMonthlyTrends(documents: any[]) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // API root endpoint
+  app.get("/api", (req, res) => {
+    res.status(200).json({ 
+      message: "Document Management System API", 
+      status: "running",
+      version: "1.0.0"
+    });
+  });
+
   // Enhanced health check endpoint that also tests database
   app.get("/health/detailed", async (req, res) => {
     try {

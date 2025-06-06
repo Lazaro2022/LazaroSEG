@@ -64,15 +64,6 @@ async function startServer() {
       });
     });
 
-    // Add root endpoint
-    app.get("/", (req, res) => {
-      res.status(200).json({ 
-        message: "Document Management System API", 
-        status: "running",
-        version: "1.0.0"
-      });
-    });
-
     // Validate database connection (non-blocking)
     const dbConnected = await validateDatabaseConnection();
     if (!dbConnected) {
@@ -81,6 +72,13 @@ async function startServer() {
 
     const server = await registerRoutes(app);
 
+    // Setup environment-specific middleware BEFORE error handling
+    if (process.env.NODE_ENV === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -88,13 +86,6 @@ async function startServer() {
       log(`Error: ${message} (${status})`);
       res.status(status).json({ message });
     });
-
-    // Setup environment-specific middleware
-    if (process.env.NODE_ENV === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
 
     // Configure port for Cloud Run compatibility
     const port = parseInt(process.env.PORT || "5000", 10);
