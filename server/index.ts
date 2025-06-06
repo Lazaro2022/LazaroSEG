@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
+import { logEnvironmentStatus } from "./env-validation";
 
 const app = express();
 app.use(express.json());
@@ -51,6 +52,11 @@ async function validateDatabaseConnection() {
 
 async function startServer() {
   try {
+    // Validate environment variables
+    if (!logEnvironmentStatus()) {
+      throw new Error("Environment validation failed");
+    }
+
     // Validate database connection before starting server
     const dbConnected = await validateDatabaseConnection();
     if (!dbConnected) {
