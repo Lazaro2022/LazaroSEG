@@ -300,38 +300,38 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
-      <main className="flex-1 ml-64 flex flex-col">
+      <div className="flex-1 flex flex-col md:ml-64">
         <Header />
         
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <h1 className="text-3xl font-bold">Configurações do Sistema</h1>
+        <div className="flex-1 p-3 md:p-6 overflow-y-auto space-y-4 md:space-y-6"></div>
+          <h1 className="text-xl md:text-3xl font-bold">Configurações do Sistema</h1>
           
-          <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="glass-morphism p-1">
-              <TabsTrigger value="general" className="flex items-center space-x-2">
-                <Settings className="w-4 h-4" />
-                <span>Geral</span>
+          <Tabs defaultValue="general" className="space-y-4 md:space-y-6">
+            <TabsList className="glass-morphism p-1 w-full overflow-x-auto flex-nowrap"
+              <TabsTrigger value="general" className="flex items-center space-x-1 md:space-x-2 whitespace-nowrap">
+                <Settings className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm">Geral</span>
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center space-x-2">
-                <User className="w-4 h-4" />
-                <span>Usuários</span>
+              <TabsTrigger value="users" className="flex items-center space-x-1 md:space-x-2 whitespace-nowrap">
+                <User className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm">Usuários</span>
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center space-x-2">
-                <Bell className="w-4 h-4" />
-                <span>Notificações</span>
+              <TabsTrigger value="notifications" className="flex items-center space-x-1 md:space-x-2 whitespace-nowrap">
+                <Bell className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm">Notificações</span>
               </TabsTrigger>
-              <TabsTrigger value="security" className="flex items-center space-x-2">
-                <Lock className="w-4 h-4" />
-                <span>Segurança</span>
+              <TabsTrigger value="security" className="flex items-center space-x-1 md:space-x-2 whitespace-nowrap">
+                <Lock className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm">Segurança</span>
               </TabsTrigger>
-              <TabsTrigger value="system" className="flex items-center space-x-2">
-                <Database className="w-4 h-4" />
-                <span>Sistema</span>
+              <TabsTrigger value="system" className="flex items-center space-x-1 md:space-x-2 whitespace-nowrap">
+                <Database className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm">Sistema</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="general">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <Card className="glass-morphism">
                   <CardHeader>
                     <CardTitle>Configurações Gerais</CardTitle>
@@ -613,7 +613,7 @@ export default function SettingsPage() {
                     </div>
                     
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
+                      <table className="w-full text-xs md:text-sm min-w-[600px]">
                         <thead>
                           <tr className="border-b border-white/10">
                             <th className="text-left py-3 px-4 font-medium text-gray-300">Nome</th>
@@ -635,12 +635,12 @@ export default function SettingsPage() {
                                 </div>
                               </td>
                               <td className="py-4 px-4">
-                                <div className="flex space-x-2">
+                                <div className="flex flex-col md:flex-row space-y-1 md:space-y-0 md:space-x-2">
                                   <Button 
                                     size="sm" 
                                     variant="outline" 
                                     onClick={() => handleEditUser(user)}
-                                    className="hover:bg-blue-500/20"
+                                    className="hover:bg-blue-500/20 text-xs md:text-sm btn-mobile"
                                   >
                                     <Edit className="w-3 h-3 mr-1" />
                                     Editar
@@ -649,7 +649,7 @@ export default function SettingsPage() {
                                     size="sm" 
                                     variant="outline" 
                                     onClick={() => handleDeleteUser(user.id)}
-                                    className="text-red-400 hover:bg-red-500/20"
+                                    className="text-red-400 hover:bg-red-500/20 text-xs md:text-sm btn-mobile"
                                   >
                                     <Trash2 className="w-3 h-3 mr-1" />
                                     Remover
@@ -705,7 +705,7 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Configurações de Email</h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <div>
                         <Label htmlFor="smtpServer">Servidor SMTP</Label>
                         <Input
@@ -862,7 +862,7 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Informações do Sistema</h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm">
                       <div>
                         <Label className="text-gray-400">Versão do Sistema</Label>
                         <p className="text-white">v1.0.0</p>
@@ -890,10 +890,10 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Ações do Sistema</h3>
                     
-                    <div className="flex space-x-4">
+                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
                       <Button 
                         variant="outline" 
-                        className="bg-gray-700/50"
+                        className="bg-gray-700/50 text-xs md:text-sm btn-mobile"
                         onClick={() => exportDataMutation.mutate()}
                         disabled={exportDataMutation.isPending}
                       >
@@ -901,13 +901,13 @@ export default function SettingsPage() {
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="bg-gray-700/50"
+                        className="bg-gray-700/50 text-xs md:text-sm btn-mobile"
                         onClick={() => clearCacheMutation.mutate()}
                         disabled={clearCacheMutation.isPending}
                       >
                         {clearCacheMutation.isPending ? "Limpando..." : "Limpar Cache"}
                       </Button>
-                      <Button variant="outline" className="bg-red-600/20 text-red-400 border-red-500/30">
+                      <Button variant="outline" className="bg-red-600/20 text-red-400 border-red-500/30 text-xs md:text-sm btn-mobile">
                         Reiniciar Sistema
                       </Button>
                     </div>
@@ -926,7 +926,7 @@ export default function SettingsPage() {
             </Button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
