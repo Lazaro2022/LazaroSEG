@@ -208,7 +208,10 @@ export default function SettingsPage() {
       const response = await fetch(`/api/users/${id}`, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Failed to delete user");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete user");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -218,12 +221,22 @@ export default function SettingsPage() {
         description: "Usuário foi removido com sucesso.",
       });
     },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Falha ao remover usuário.",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      const errorMessage = error.message;
+      
+      if (errorMessage.includes("Cannot delete user with assigned documents")) {
+        toast({
+          title: "Não é possível remover usuário",
+          description: "Este usuário possui documentos atribuídos. Reatribua ou conclua os documentos antes de remover o usuário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao remover usuário",
+          description: "Falha ao remover usuário. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
