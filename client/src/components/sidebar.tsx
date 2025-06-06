@@ -5,11 +5,13 @@ import {
   TrendingUp, 
   Settings,
   Shield,
+  Users,
   Menu,
   X
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const navigationItems = [
   { icon: BarChart3, label: "Dashboard", href: "/" },
@@ -19,9 +21,14 @@ const navigationItems = [
   { icon: Settings, label: "Configurações", href: "/settings" },
 ];
 
+const adminNavigationItems = [
+  { icon: Users, label: "Usuários", href: "/users" },
+];
+
 export function Sidebar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   return (
     <>
@@ -85,6 +92,43 @@ export function Sidebar() {
                 </li>
               );
             })}
+            
+            {/* Admin Section */}
+            {isAdmin && (
+              <>
+                <li className="pt-4">
+                  <div className="flex items-center px-4 py-2">
+                    <Shield className="w-4 h-4 mr-2 text-yellow-500" />
+                    <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wider">
+                      Administração
+                    </span>
+                  </div>
+                </li>
+                {adminNavigationItems.map((item, index) => {
+                  const Icon = item.icon;
+                  const isActive = location === item.href;
+                  
+                  return (
+                    <li key={`admin-${index}`}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`
+                          sidebar-item flex items-center px-4 py-3 rounded-lg font-medium transition-all duration-300
+                          ${isActive 
+                            ? 'text-white bg-yellow-600/30 border-l-2 border-l-yellow-500' 
+                            : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                          }
+                        `}
+                      >
+                        <Icon className="w-5 h-5 mr-3" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </>
+            )}
           </ul>
         </nav>
       </aside>

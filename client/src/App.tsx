@@ -10,6 +10,7 @@ import DocumentsPage from "@/pages/documents";
 import DeadlinesPage from "@/pages/deadlines";
 import ReportsPage from "@/pages/reports-new";
 import SettingsPage from "@/pages/settings";
+import UsersPage from "@/pages/users";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +30,7 @@ function AuthenticatedRouter() {
             <Route path="/deadlines" component={DeadlinesPage} />
             <Route path="/reports" component={ReportsPage} />
             <Route path="/settings" component={SettingsPage} />
+            <Route path="/users" component={UsersPage} />
             <Route component={NotFound} />
           </Switch>
         </div>

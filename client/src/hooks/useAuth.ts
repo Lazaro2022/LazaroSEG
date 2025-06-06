@@ -19,7 +19,7 @@ export function useAuth() {
     queryFn: async () => {
       try {
         const response = await apiRequest("GET", "/api/auth/user");
-        return response as User;
+        return response as unknown as User;
       } catch (error: any) {
         if (error.message?.includes("401")) {
           return null;

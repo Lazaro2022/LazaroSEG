@@ -38,10 +38,10 @@ export default function LoginPage({ onLoginSuccess }: LoginProps) {
     mutationFn: async (data: LoginFormData) => {
       return apiRequest("POST", "/api/auth/login", data);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo, ${data.user.name}!`,
+        description: `Bem-vindo, ${data.user?.name || "usuário"}!`,
       });
       onLoginSuccess();
     },
