@@ -142,7 +142,7 @@ export function Header() {
               {user?.name}
             </div>
             <div className="text-xs text-gray-400">
-              {user?.role === "admin" ? "Administrador" : `Usuário (${user?.role || 'sem role'})`}
+              {user?.role?.toLowerCase() === "admin" ? "Administrador" : "Usuário"}
             </div>
           </div>
           
