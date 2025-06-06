@@ -218,10 +218,10 @@ export function Header() {
 
           
           {/* User Avatar */}
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="text-right hidden sm:block">
               <div className="flex items-center space-x-2">
-                <div className="text-sm font-medium">
+                <div className="text-xs md:text-sm font-medium">
                   {systemSettings?.admin_name || "Lazarus"}
                 </div>
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -273,10 +273,10 @@ export function Header() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <div className="text-xs text-gray-400">Administrador</div>
+              <div className="text-xs text-gray-400 hidden md:block">Administrador</div>
             </div>
-            <Avatar className="w-10 h-10 border-2 border-[hsl(var(--neon-turquoise))]">
-              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">L</AvatarFallback>
+            <Avatar className="w-8 md:w-10 h-8 md:h-10 border-2 border-[hsl(var(--neon-turquoise))]">
+              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs md:text-sm">L</AvatarFallback>
             </Avatar>
           </div>
         </div>

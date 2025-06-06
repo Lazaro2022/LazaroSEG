@@ -53,13 +53,13 @@ export function KpiCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {cardConfigs.map((_, index) => (
           <Card key={index} className="glass-morphism border-l-4 border-l-gray-500">
-            <CardContent className="p-6">
-              <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-700 rounded w-1/2"></div>
+            <CardContent className="p-4 md:p-6">
+              <div className="animate-pulse space-y-3 md:space-y-4">
+                <div className="h-3 md:h-4 bg-gray-700 rounded w-3/4"></div>
+                <div className="h-6 md:h-8 bg-gray-700 rounded w-1/2"></div>
                 <div className="h-2 bg-gray-700 rounded"></div>
               </div>
             </CardContent>
@@ -70,23 +70,23 @@ export function KpiCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
       {cardConfigs.map((config) => {
         const Icon = config.icon;
         const value = stats?.[config.key] || 0;
         
         return (
           <Card key={config.key} className={`kpi-card glass-morphism border-l-4 ${config.borderColor}`}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between mb-3 md:mb-4">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-300">{config.title}</h3>
-                  <div className={`text-3xl font-bold mt-2 ${config.color}`}>
+                  <h3 className="text-sm md:text-lg font-medium text-gray-300">{config.title}</h3>
+                  <div className={`text-xl md:text-3xl font-bold mt-1 md:mt-2 ${config.color}`}>
                     {value.toLocaleString()}
                   </div>
                 </div>
-                <div className={`w-12 h-12 ${config.bgColor} rounded-lg flex items-center justify-center`}>
-                  <Icon className={`${config.color} w-6 h-6`} />
+                <div className={`w-10 md:w-12 h-10 md:h-12 ${config.bgColor} rounded-lg flex items-center justify-center`}>
+                  <Icon className={`${config.color} w-5 md:w-6 h-5 md:h-6`} />
                 </div>
               </div>
               <Progress 
