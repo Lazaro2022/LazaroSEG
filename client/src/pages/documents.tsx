@@ -348,8 +348,8 @@ export default function DocumentsPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <main className="flex-1 overflow-y-auto p-3 md:p-6">
-          <div className="container mx-auto max-w-7xl space-y-4 md:space-y-6">
+        <main className="flex-1 overflow-y-auto p-2 md:p-6">
+          <div className="w-full max-w-7xl mx-auto space-y-4 md:space-y-6 px-1 md:px-0">
             {/* Header Section */}
             <div className="flex flex-col gap-3 md:gap-4">
               <div>
