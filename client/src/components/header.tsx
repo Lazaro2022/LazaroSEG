@@ -110,19 +110,19 @@ export function Header() {
   };
 
   return (
-    <header className="glass-morphism border-b border-white/10 p-6">
-      <div className="flex items-center justify-between">
+    <header className="glass-morphism border-b border-white/10 p-3 md:p-6">
+      <div className="flex items-center justify-between gap-2 md:gap-4">
         {/* Search Bar */}
         <div className="flex-1 max-w-lg relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
-            placeholder="Buscar documentos, processos ou apenados..."
+            placeholder="Buscar documentos..."
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
             onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
             onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border-gray-600/30 rounded-lg focus:border-[hsl(var(--neon-turquoise))] focus:ring-2 focus:ring-[hsl(var(--neon-turquoise))]/20 text-white placeholder-gray-400"
+            className="w-full pl-10 pr-4 py-2 md:py-3 bg-gray-800/50 border-gray-600/30 rounded-lg focus:border-[hsl(var(--neon-turquoise))] focus:ring-2 focus:ring-[hsl(var(--neon-turquoise))]/20 text-white placeholder-gray-400 text-sm md:text-base"
           />
           
           {/* Search Results Dropdown */}
@@ -204,12 +204,12 @@ export function Header() {
         </div>
         
         {/* User Info & Countdown */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-2 md:space-x-6">
           {/* Countdown Timer */}
-          <div className="flex items-center space-x-3 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2">
-            <Clock className="text-red-400 w-5 h-5 animate-pulse" />
-            <div className="text-sm">
-              <div className="font-medium text-[#ebebf5]">Próximo Prazo</div>
+          <div className="hidden sm:flex items-center space-x-2 md:space-x-3 bg-red-500/20 border border-red-500/30 rounded-lg px-2 md:px-4 py-1 md:py-2">
+            <Clock className="text-red-400 w-4 md:w-5 h-4 md:h-5 animate-pulse" />
+            <div className="text-xs md:text-sm">
+              <div className="font-medium text-[#ebebf5] hidden md:block">Próximo Prazo</div>
               <div className="text-white font-bold">
                 {timeLeft || "Sem prazos"}
               </div>
