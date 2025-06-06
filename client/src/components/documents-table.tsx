@@ -57,7 +57,12 @@ const editFormSchema = z.object({
   assignedTo: z.number().nullable(),
 });
 
+const deletePasswordSchema = z.object({
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
 type EditFormData = z.infer<typeof editFormSchema>;
+type DeletePasswordData = z.infer<typeof deletePasswordSchema>;
 
 export function DocumentsTable() {
   const { toast } = useToast();
@@ -66,6 +71,7 @@ export function DocumentsTable() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
 
   const { data: documents, isLoading } = useQuery<DocumentWithUser[]>({
     queryKey: ["/api/documents?limit=10"],
@@ -84,6 +90,13 @@ export function DocumentsTable() {
       deadline: "",
       status: "",
       assignedTo: null,
+    },
+  });
+
+  const deletePasswordForm = useForm<DeletePasswordData>({
+    resolver: zodResolver(deletePasswordSchema),
+    defaultValues: {
+      password: "",
     },
   });
 
@@ -215,11 +228,24 @@ export function DocumentsTable() {
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = (data: DeletePasswordData) => {
+    // Senha de segurança para exclusão (pode ser configurada via API)
+    const ADMIN_PASSWORD = "admin123";
+    
+    if (data.password !== ADMIN_PASSWORD) {
+      toast({
+        title: "Senha incorreta",
+        description: "A senha inserida está incorreta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (documentToDelete) {
       deleteMutation.mutate(documentToDelete);
       setDeleteConfirmOpen(false);
       setDocumentToDelete(null);
+      deletePasswordForm.reset();
     }
   };
 
@@ -395,7 +421,12 @@ export function DocumentsTable() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={(open) => {
+        setDeleteConfirmOpen(open);
+        if (!open) {
+          deletePasswordForm.reset();
+        }
+      }}>
         <AlertDialogContent className="card-glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Confirmar Exclusão</AlertDialogTitle>
@@ -404,21 +435,48 @@ export function DocumentsTable() {
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => setDeleteConfirmOpen(false)}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={deleteMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          
+          <Form {...deletePasswordForm}>
+            <form onSubmit={deletePasswordForm.handleSubmit(confirmDelete)} className="space-y-4">
+              <FormField
+                control={deletePasswordForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Senha de Administrador</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder="Digite a senha de segurança"
+                        className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <AlertDialogFooter>
+                <AlertDialogCancel 
+                  onClick={() => {
+                    setDeleteConfirmOpen(false);
+                    deletePasswordForm.reset();
+                  }}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  Cancelar
+                </AlertDialogCancel>
+                <Button
+                  type="submit"
+                  disabled={deleteMutation.isPending}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+                </Button>
+              </AlertDialogFooter>
+            </form>
+          </Form>
         </AlertDialogContent>
       </AlertDialog>
 

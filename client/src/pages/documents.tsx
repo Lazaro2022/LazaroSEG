@@ -27,7 +27,12 @@ const documentFormSchema = insertDocumentSchema.extend({
   deadline: z.date(),
 });
 
+const deletePasswordSchema = z.object({
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
 type DocumentFormData = z.infer<typeof documentFormSchema>;
+type DeletePasswordData = z.infer<typeof deletePasswordSchema>;
 
 const statusConfig = {
   "Em Andamento": { 
