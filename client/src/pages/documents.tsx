@@ -897,7 +897,6 @@ export default function DocumentsPage() {
             </Dialog>
           </div>
         </main>
-      </div>
     </div>
   );
 }
