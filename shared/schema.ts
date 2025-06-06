@@ -118,3 +118,26 @@ export type DocumentTypeStats = {
   relatorios: number;
   oficios: number;
 };
+
+export type MonthlyStats = {
+  month: string;
+  created: number;
+  completed: number;
+  completionRate: number;
+};
+
+export type YearlyComparison = {
+  currentYear: {
+    year: number;
+    totalDocuments: number;
+    completedDocuments: number;
+    completionRate: number;
+  };
+  previousYear: {
+    year: number;
+    totalDocuments: number;
+    completedDocuments: number;
+    completionRate: number;
+  };
+  growthRate: number;
+};
