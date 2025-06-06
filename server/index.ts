@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { db } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -36,35 +37,83 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+async function validateDatabaseConnection() {
+  try {
+    log("Validating database connection...");
+    await db.execute("SELECT 1");
+    log("Database connection validated successfully");
+    return true;
+  } catch (error) {
+    log(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return false;
   }
+}
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+async function startServer() {
+  try {
+    // Validate database connection before starting server
+    const dbConnected = await validateDatabaseConnection();
+    if (!dbConnected) {
+      throw new Error("Failed to connect to database");
+    }
+
+    const server = await registerRoutes(app);
+
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      
+      log(`Error: ${message} (${status})`);
+      res.status(status).json({ message });
+    });
+
+    // Setup environment-specific middleware
+    if (process.env.NODE_ENV === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // Configure port for Cloud Run compatibility
+    const port = parseInt(process.env.PORT || "5000", 10);
+    const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "0.0.0.0";
+
+    return new Promise<void>((resolve, reject) => {
+      const serverInstance = server.listen(port, host, () => {
+        log(`Server started successfully on ${host}:${port}`);
+        log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        resolve();
+      });
+
+      serverInstance.on('error', (error: Error) => {
+        log(`Server failed to start: ${error.message}`);
+        reject(error);
+      });
+
+      // Graceful shutdown
+      process.on('SIGTERM', () => {
+        log('SIGTERM received, shutting down gracefully');
+        serverInstance.close(() => {
+          log('Server closed');
+          process.exit(0);
+        });
+      });
+
+      process.on('SIGINT', () => {
+        log('SIGINT received, shutting down gracefully');
+        serverInstance.close(() => {
+          log('Server closed');
+          process.exit(0);
+        });
+      });
+    });
+  } catch (error) {
+    log(`Failed to start server: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    process.exit(1);
+  }
+}
+
+startServer().catch((error) => {
+  log(`Startup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  process.exit(1);
+});

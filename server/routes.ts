@@ -159,6 +159,34 @@ function generateRealMonthlyTrends(documents: any[]) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Cloud Run
+  app.get("/health", async (req, res) => {
+    try {
+      // Test database connection
+      await db.execute(sql`SELECT 1`);
+      res.status(200).json({ 
+        status: "healthy", 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+      });
+    } catch (error) {
+      res.status(503).json({ 
+        status: "unhealthy", 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Root health check (alternative endpoint)
+  app.get("/", (req, res) => {
+    res.status(200).json({ 
+      message: "Document Management System API", 
+      status: "running",
+      version: "1.0.0"
+    });
+  });
+
   // Initialize database with sample data
   await storage.initializeData();
   // Dashboard stats
