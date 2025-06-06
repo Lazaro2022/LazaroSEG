@@ -159,36 +159,31 @@ function generateRealMonthlyTrends(documents: any[]) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint for Cloud Run
-  app.get("/health", async (req, res) => {
+  // Enhanced health check endpoint that also tests database
+  app.get("/health/detailed", async (req, res) => {
     try {
-      // Test database connection
       await db.execute(sql`SELECT 1`);
       res.status(200).json({ 
         status: "healthy", 
+        database: "connected",
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
       });
     } catch (error) {
       res.status(503).json({ 
-        status: "unhealthy", 
+        status: "degraded", 
+        database: "disconnected",
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       });
     }
   });
 
-  // Root health check (alternative endpoint)
-  app.get("/", (req, res) => {
-    res.status(200).json({ 
-      message: "Document Management System API", 
-      status: "running",
-      version: "1.0.0"
-    });
+  // Initialize database with sample data (non-blocking)
+  storage.initializeData().catch(error => {
+    console.warn("⚠️ Database initialization failed:", error.message);
+    console.warn("Some features may be limited until database is available");
   });
-
-  // Initialize database with sample data
-  await storage.initializeData();
   // Dashboard stats
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

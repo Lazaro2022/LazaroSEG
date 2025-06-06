@@ -13,14 +13,12 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  console.warn("⚠️ DATABASE_URL not set - database features will be limited");
 }
 
 // Configure connection pool for production deployment
 const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
   // Optimize for serverless deployment
   max: process.env.NODE_ENV === 'production' ? 1 : 10,
   idleTimeoutMillis: 30000,

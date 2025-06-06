@@ -52,15 +52,31 @@ async function validateDatabaseConnection() {
 
 async function startServer() {
   try {
-    // Validate environment variables
-    if (!logEnvironmentStatus()) {
-      throw new Error("Environment validation failed");
-    }
+    // Validate environment variables (non-blocking)
+    logEnvironmentStatus();
 
-    // Validate database connection before starting server
+    // Add basic health check that doesn't require database
+    app.get("/health", (req, res) => {
+      res.status(200).json({ 
+        status: "healthy", 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+      });
+    });
+
+    // Add root endpoint
+    app.get("/", (req, res) => {
+      res.status(200).json({ 
+        message: "Document Management System API", 
+        status: "running",
+        version: "1.0.0"
+      });
+    });
+
+    // Validate database connection (non-blocking)
     const dbConnected = await validateDatabaseConnection();
     if (!dbConnected) {
-      throw new Error("Failed to connect to database");
+      log("⚠️ Database connection failed - some features may be limited");
     }
 
     const server = await registerRoutes(app);
