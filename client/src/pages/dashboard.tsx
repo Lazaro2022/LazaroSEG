@@ -9,11 +9,11 @@ export default function Dashboard() {
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
       
-      <main className="flex-1 md:ml-64 flex flex-col">
+      <main className="flex-1 ml-64 flex flex-col">
         <Header />
         
-        <div className="flex-1 p-3 md:p-6 overflow-y-auto">
-          <div className="space-y-4 md:space-y-6">
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
             <KpiCards />
             <ChartsPanel />
           </div>
