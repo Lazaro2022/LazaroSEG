@@ -315,12 +315,8 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
-      <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-64 ml-0">
-        <Header />
-
-        {/* Delete Confirmation Dialog */}
+    <div className="p-3 md:p-6 overflow-y-auto">
+      {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
           <AlertDialogContent className="card-glass">
             <AlertDialogHeader>
