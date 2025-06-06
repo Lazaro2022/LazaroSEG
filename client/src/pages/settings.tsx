@@ -307,7 +307,7 @@ export default function SettingsPage() {
           <h1 className="text-xl md:text-3xl font-bold">Configurações do Sistema</h1>
           
           <Tabs defaultValue="general" className="space-y-4 md:space-y-6">
-            <TabsList className="glass-morphism p-1 w-full overflow-x-auto flex-nowrap"
+            <TabsList className="glass-morphism p-1 w-full overflow-x-auto flex-nowrap">
               <TabsTrigger value="general" className="flex items-center space-x-1 md:space-x-2 whitespace-nowrap">
                 <Settings className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-xs md:text-sm">Geral</span>
