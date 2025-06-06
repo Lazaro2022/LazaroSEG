@@ -18,7 +18,8 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     queryFn: async () => {
       try {
-        return await apiRequest("GET", "/api/auth/user");
+        const response = await apiRequest("GET", "/api/auth/user");
+        return response as User;
       } catch (error: any) {
         if (error.message?.includes("401")) {
           return null;

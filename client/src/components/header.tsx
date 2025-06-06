@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Clock, User, Edit3 } from "lucide-react";
+import { Search, Clock, User, Edit3, LogOut, Settings } from "lucide-react";
 import { useCountdown } from "@/hooks/use-countdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import type { DocumentWithUser } from "@shared/schema";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,6 +26,7 @@ export function Header() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, logout, isAdmin } = useAuth();
 
   const { data: nextDeadlineData } = useQuery<{deadline: string}>({
     queryKey: ["/api/dashboard/next-deadline"],
@@ -216,68 +219,54 @@ export function Header() {
             </div>
           </div>
 
-          
           {/* User Avatar */}
           <div className="flex items-center space-x-2 md:space-x-3">
             <div className="text-right hidden sm:block">
-              <div className="flex items-center space-x-2">
-                <div className="text-xs md:text-sm font-medium">
-                  {systemSettings?.admin_name || "Lazarus"}
-                </div>
-                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-white"
-                      onClick={() => {
-                        setAdminName(systemSettings?.admin_name || "Lazarus");
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <Edit3 className="h-3 w-3" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="glass-morphism-dark border-white/10 max-w-sm">
-                    <DialogHeader>
-                      <DialogTitle>Editar Nome do Administrador</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="adminName">Nome do Administrador</Label>
-                        <Input
-                          id="adminName"
-                          value={adminName}
-                          onChange={(e) => setAdminName(e.target.value)}
-                          className="bg-gray-800/50 border-gray-600/30"
-                          placeholder="Digite o nome do administrador"
-                        />
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => setIsEditDialogOpen(false)}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button
-                          className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          onClick={() => updateAdminMutation.mutate(adminName)}
-                          disabled={updateAdminMutation.isPending || !adminName.trim()}
-                        >
-                          {updateAdminMutation.isPending ? "Salvando..." : "Salvar"}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+              <div className="text-xs md:text-sm font-medium text-white">
+                {user?.name}
               </div>
-              <div className="text-xs text-gray-400 hidden md:block">Administrador</div>
+              <div className="text-xs text-gray-400">
+                {isAdmin ? "Administrador" : "Usuário"}
+              </div>
             </div>
-            <Avatar className="w-8 md:w-10 h-8 md:h-10 border-2 border-[hsl(var(--neon-turquoise))]">
-              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs md:text-sm">L</AvatarFallback>
-            </Avatar>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-blue-600 text-white text-sm">
+                      {user?.initials || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 glass-morphism-dark border-white/10" align="end">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium text-white">{user?.name}</p>
+                    <p className="w-[200px] truncate text-sm text-gray-400">
+                      @{user?.username}
+                    </p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem 
+                  onClick={() => setLocation("/settings")}
+                  className="text-gray-300 hover:text-white hover:bg-white/10"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Configurações
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem 
+                  onClick={logout}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
