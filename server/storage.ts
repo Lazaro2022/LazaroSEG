@@ -1,7 +1,6 @@
 import { users, documents, servers, type User, type InsertUser, type Document, type InsertDocument, type Server, type InsertServer, type DocumentWithUser, type ServerWithUser, type DashboardStats, type DocumentTypeStats, type MonthlyStats, type YearlyComparison } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, ne, gt, count } from "drizzle-orm";
-import { hashPassword } from "./auth";
 
 export interface IStorage {
   // Users
@@ -43,23 +42,13 @@ export class DatabaseStorage implements IStorage {
       return; // Data already initialized
     }
 
-    // Create admin user first
-    const adminUser: InsertUser = {
-      username: "admin",
-      password: await hashPassword("admin123"),
-      name: "Administrador",
-      role: "admin",
-      initials: "AD"
-    };
-
-    const [insertedAdmin] = await db.insert(users).values(adminUser).returning();
-
-    // Create sample users with hashed passwords
+    // Create users
     const sampleUsers: InsertUser[] = [
-      { username: "ana.costa", password: await hashPassword("123456"), name: "Ana Costa", role: "user", initials: "AC" },
-      { username: "marco.silva", password: await hashPassword("123456"), name: "Marco Silva", role: "user", initials: "MS" },
-      { username: "lucia.ferreira", password: await hashPassword("123456"), name: "Lucia Ferreira", role: "user", initials: "LF" },
-      { username: "roberto.castro", password: await hashPassword("123456"), name: "Roberto Castro", role: "user", initials: "RC" },
+      { username: "lazarus.admin", password: "admin123", name: "Lazarus", role: "Administrador do Sistema - Manaus/AM", initials: "LAZ" },
+      { username: "ana.costa", password: "123456", name: "Ana Costa", role: "Coordenadora Jurídica", initials: "AC" },
+      { username: "marco.silva", password: "123456", name: "Marco Silva", role: "Assistente Social", initials: "MS" },
+      { username: "lucia.ferreira", password: "123456", name: "Lucia Ferreira", role: "Psicóloga", initials: "LF" },
+      { username: "roberto.castro", password: "123456", name: "Roberto Castro", role: "Advogado", initials: "RC" },
     ];
 
     const insertedUsers = await db.insert(users).values(sampleUsers).returning();
@@ -134,16 +123,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Hash password before storing
-    const hashedPassword = await hashPassword(insertUser.password);
-    
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...insertUser,
-        password: hashedPassword,
-      })
-      .returning();
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 

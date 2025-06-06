@@ -298,10 +298,15 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
-      <h1 className="text-xl md:text-3xl font-bold">Configurações do Sistema</h1>
-      
-      <Tabs defaultValue="general" className="space-y-6">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      <Sidebar />
+      <main className="flex-1 md:ml-64 ml-0 flex flex-col">
+        <Header />
+        
+        <div className="flex-1 p-3 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
+          <h1 className="text-xl md:text-3xl font-bold">Configurações do Sistema</h1>
+          
+          <Tabs defaultValue="general" className="space-y-6">
             <TabsList className="glass-morphism p-1">
               <TabsTrigger value="general" className="flex items-center space-x-2">
                 <Settings className="w-4 h-4" />
@@ -920,6 +925,8 @@ export default function SettingsPage() {
               Salvar Configurações
             </Button>
           </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,12 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertDocumentSchema, insertUserSchema } from "@shared/schema";
+import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 import { generatePDFReport, generateProductivityReport } from "./pdf-generator";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { sessionConfig, login, logout, requireAuth, requireAdmin, getCurrentUser } from "./auth";
 
 // Helper functions for generating chart data
 function generateDailyProduction(documents: any[]) {
@@ -160,18 +159,10 @@ function generateRealMonthlyTrends(documents: any[]) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Configure session middleware
-  app.use(sessionConfig);
-  
   // Initialize database with sample data
   await storage.initializeData();
-
-  // Authentication routes (public)
-  app.post("/api/auth/login", login);
-  app.post("/api/auth/logout", logout);
-  app.get("/api/auth/user", getCurrentUser);
-  // Dashboard stats (protected)
-  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
+  // Dashboard stats
+  app.get("/api/dashboard/stats", async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -180,8 +171,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Document type statistics (protected)
-  app.get("/api/dashboard/document-types", requireAuth, async (req, res) => {
+  // Document type statistics
+  app.get("/api/dashboard/document-types", async (req, res) => {
     try {
       const stats = await storage.getDocumentTypeStats();
       res.json(stats);
@@ -190,8 +181,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Next deadline (protected)
-  app.get("/api/dashboard/next-deadline", requireAuth, async (req, res) => {
+  // Next deadline
+  app.get("/api/dashboard/next-deadline", async (req, res) => {
     try {
       const deadline = await storage.getNextDeadline();
       res.json({ deadline });
@@ -200,8 +191,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Documents (protected)
-  app.get("/api/documents", requireAuth, async (req, res) => {
+  // Documents
+  app.get("/api/documents", async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const documents = limit 
@@ -383,37 +374,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Users
-  // User management routes (admin only)
-  app.get("/api/users", requireAuth, requireAdmin, async (req, res) => {
+  app.get("/api/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      // Don't send passwords in response
-      const safeUsers = users.map(user => ({
-        ...user,
-        password: undefined
-      }));
-      res.json(safeUsers);
+      res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
     }
   });
 
-  app.get("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+  app.get("/api/users/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const user = await storage.getUser(id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      // Don't send password in response
-      const safeUser = { ...user, password: undefined };
-      res.json(safeUser);
+      res.json(user);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  app.post("/api/users", requireAuth, requireAdmin, async (req, res) => {
+  app.post("/api/users", async (req, res) => {
     try {
       const userData = req.body;
       console.log('Creating user with data:', userData);

@@ -154,8 +154,12 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="p-3 md:p-6 overflow-y-auto">
-      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+    <div className="flex h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
+      <Sidebar />
+      <div className="flex-1 md:ml-64 ml-0 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -244,7 +248,11 @@ export default function ReportsPage() {
             {productivityData && (
               <ProductivityCharts data={productivityData} />
             )}
+
+
           </div>
+        </main>
+      </div>
     </div>
   );
 }
